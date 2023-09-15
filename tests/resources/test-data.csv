@@ -1,0 +1,15 @@
+Device Type,Browser,Platform,n,weight
+Desktop,Chrome,Linux,256,192.4608
+Tablet,Safari,iOS,6,6.8412
+Desktop,Chrome,MacOSX,227,233.7873
+Desktop,IE,Windows,35,36.372
+Desktop,Chrome,Windows,221,263.7193
+Desktop,Firefox,MacOSX,38,42.8298
+Mobile Device,Safari,iOS,21,25.8615
+Desktop,Netscape,Windows,21,18.5178
+Desktop,Safari,MacOSX,38,35.9404
+Mobile Device,Edge,iOS,1,0.9631
+Desktop,Safari,Windows,15,13.506
+Desktop,Firefox,Linux,27,28.4229
+Desktop,Firefox,Windows,12,14.3112
+Desktop,Edge,Windows,82,67.6746

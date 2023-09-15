@@ -1,0 +1,44 @@
+{
+  "name": "cliffordvickrey/crosstabs",
+  "description": "PHP Crosstabs",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "CliffordVickrey\\Crosstabs\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CliffordVickrey\\Crosstabs\\Tests\\": "tests/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Clifford Vickrey",
+      "email": "clifforddavidvickrey@gmail.com"
+    }
+  ],
+  "require": {
+    "ext-bcmath": "*",
+    "ext-intl": "*",
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.0",
+    "phpunit/phpunit": "^10.0",
+    "squizlabs/php_codesniffer": "^3.0",
+    "vimeo/psalm": "^5.15"
+  },
+  "scripts": {
+    "analyse": "vendor/bin/phpstan analyse",
+    "baseline": "vendor/bin/phpstan analyse --generate-baseline",
+    "delete-answers": "@php bin/delete-answers",
+    "fake-answers": "@php bin/fake-answers",
+    "migrate": "phpunit --migrate-configuration",
+    "phpcs": "vendor/bin/phpcs",
+    "phpcbf": "vendor/bin/phpcbf",
+    "psalm": "vendor/bin/psalm",
+    "test": "phpunit"
+  }
+}
