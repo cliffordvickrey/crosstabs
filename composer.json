@@ -1,6 +1,12 @@
 {
   "name": "cliffordvickrey/crosstabs",
   "description": "PHP Crosstabs",
+  "keywords": [
+    "chi-square",
+    "crosstab",
+    "contingency tables",
+    "statistics"
+  ],
   "type": "library",
   "license": "MIT",
   "autoload": {
