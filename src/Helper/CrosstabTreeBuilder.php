@@ -9,27 +9,38 @@ use CliffordVickrey\Crosstabs\Exception\CrosstabInvalidArgumentException;
 use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
+use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
+use WeakMap;
 
 use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
+use function array_pop;
 use function http_build_query;
 use function is_array;
 
 /**
  * @internal
  */
-final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
+final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 {
-    public const MATRIX_KEY = '__matrix';
+    /** @var WeakMap<CrosstabTree, list<list<CrosstabDataItem>>> */
+    private WeakMap $treeToMatrixMap;
+
+    /**
+     *
+     */
+    public function __construct()
+    {
+        /** @psalm-suppress PropertyTypeCoercion */
+        $this->treeToMatrixMap = new WeakMap();
+    }
 
     /**
      * @inheritDoc
-     * @psalm-suppress UnnecessaryVarAnnotation
      */
     public function buildTree(
         CrosstabVariableCollection $variables,
@@ -37,14 +48,12 @@ final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
         CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
         string $messageTotal = 'Total',
         int $scale = CrosstabMathUtilities::DEFAULT_SCALE
-    ): RecursiveIteratorIterator {
+    ): CrosstabTree {
         $matrix = [];
         $counter = 0;
         $y = -1;
 
-        /** @var RecursiveArrayIterator<array-key, mixed> $arrayIterator */
-        $arrayIterator = new RecursiveArrayIterator($variables->toTree(messageTotal: $messageTotal));
-        $treeIterator = new RecursiveIteratorIterator($arrayIterator, RecursiveIteratorIterator::SELF_FIRST);
+        $tree = new CrosstabTree($variables, $messageTotal);
 
         $rowAndColVars = $this->getRowAndColVariables($variables);
         $colVar = $rowAndColVars['col'];
@@ -60,12 +69,12 @@ final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 
         $variablesByDepth = [];
 
-        foreach ($treeIterator as $node) {
+        foreach ($tree as $node) {
             if (!is_array($node)) {
                 continue;
             }
 
-            $depth = $treeIterator->getDepth();
+            $depth = $tree->getDepth();
 
             if (!isset($variablesByDepth[$depth])) {
                 $variablesByDepth[$depth] = $currentVariable;
@@ -126,7 +135,7 @@ final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $percentDivisors = $this->getPercentDivisors($percentType, $totals, $rowVar, $colVar, $query);
 
             /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-            $subIterator = $treeIterator->getSubIterator();
+            $subIterator = $tree->getSubIterator();
 
             $item = CrosstabDataItem::__set_state([
                 CrosstabDataItem::EXPECTED_FREQUENCY => $expectedN,
@@ -176,11 +185,10 @@ final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $counter++;
         }
 
-        // hack: store the rectangular matrix of data items at the top of the tree
-        /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-        $subIterator = $treeIterator->getSubIterator(0);
-        $subIterator->offsetSet(self::MATRIX_KEY, $matrix);
-        return $treeIterator;
+        /** @psalm-suppress ArgumentTypeCoercion It's always a list of lists of objects */
+        $this->treeToMatrixMap[$tree] = $matrix;
+
+        return $tree;
     }
 
     /**
@@ -237,5 +245,13 @@ final readonly class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             'unweighted' => $totals['n'][$key] ?? 0.0,
             'weighted' => $totals['weightedN'][$key] ?? 0.0
         ];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getMatrix(CrosstabTree $tree): array
+    {
+        return $this->treeToMatrixMap[$tree] ?? [];
     }
 }

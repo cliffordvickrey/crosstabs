@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Helper;
 
+use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
+use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
 /**
- * @inheritDoc
+ * @internal
  */
 interface CrosstabTreeBuilderInterface
 {
@@ -22,7 +24,7 @@ interface CrosstabTreeBuilderInterface
      * @param CrosstabPercentType $percentType
      * @param non-empty-string $messageTotal
      * @param positive-int $scale
-     * @return RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>>
+     * @return CrosstabTree
      */
     public function buildTree(
         CrosstabVariableCollection $variables,
@@ -30,5 +32,11 @@ interface CrosstabTreeBuilderInterface
         CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
         string $messageTotal = 'Total',
         int $scale = CrosstabMathUtilities::DEFAULT_SCALE
-    ): RecursiveIteratorIterator;
+    ): CrosstabTree;
+
+    /**
+     * @param CrosstabTree $tree
+     * @return list<list<CrosstabDataItem>>
+     */
+    public function getMatrix(CrosstabTree $tree): array;
 }

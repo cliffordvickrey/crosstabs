@@ -21,11 +21,10 @@ use CliffordVickrey\Crosstabs\Options\CrosstabOptions;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
+use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabCastingUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
-use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
 
 use function array_filter;
 use function array_intersect_key;
@@ -84,13 +83,13 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
         $totals = $this->tabulator->tabulate($variables, $sourceData);
 
-        $treeIterator = $this->buildTree($variables, $totals);
+        $tree = $this->buildTree($variables, $totals);
 
         if (count($variables) < 2) {
-            return $this->buildSimple($variables, $treeIterator);
+            return $this->buildSimple($tree);
         }
 
-        return $this->buildComplex($variables, $treeIterator);
+        return $this->buildComplex($tree);
     }
 
     /**
@@ -183,12 +182,12 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
     /**
      * @param CrosstabVariableCollection $variables
      * @param array{n: array<string, float>, weightedN: array<string, float>} $totals
-     * @return RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>>
+     * @return CrosstabTree
      */
     private function buildTree(
         CrosstabVariableCollection $variables,
         array $totals
-    ): RecursiveIteratorIterator {
+    ): CrosstabTree {
         return $this->treeBuilder->buildTree(
             $variables,
             $totals,
@@ -200,15 +199,12 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
     /**
      * Builds a simple frequency distribution with one variable
-     * @param CrosstabVariableCollection $variables
-     * @param RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>> $treeIterator
+     * @param CrosstabTree $tree
      * @return Crosstab
      */
-    private function buildSimple(
-        CrosstabVariableCollection $variables,
-        RecursiveIteratorIterator $treeIterator
-    ): Crosstab {
-        list ($firstVariable) = $variables->getFirstAndLastVariables();
+    private function buildSimple(CrosstabTree $tree): Crosstab
+    {
+        list ($firstVariable) = $tree->getFirstAndLastVariablesInTree();
 
         $lastCategoryKey = array_key_last($firstVariable->categories);
         $lastCategory = '';
@@ -247,11 +243,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         $rowIndex = count($rows) - 1;
 
         /** @psalm-suppress MixedAssignment */
-        foreach ($treeIterator as $key => $node) {
-            if ($key === CrosstabTreeBuilder::MATRIX_KEY) {
-                break;
-            }
-
+        foreach ($tree as $node) {
             if (!is_array($node)) {
                 continue;
             }
@@ -305,7 +297,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             }
         }
 
-        return new Crosstab($rows, self::getMatrix($treeIterator));
+        return new Crosstab($rows, $this->treeBuilder->getMatrix($tree));
     }
 
     /**
@@ -354,31 +346,13 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
     }
 
     /**
-     * Gets the contingency table matrix as the top of the tree
-     * @param RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>> $treeIterator
-     * @return list<list<CrosstabDataItem>>
-     */
-    private static function getMatrix(RecursiveIteratorIterator $treeIterator): array
-    {
-        $treeIterator->rewind();
-        /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-        $subIterator = $treeIterator->getSubIterator(0);
-        /** @var list<list<CrosstabDataItem>> $matrix */
-        $matrix = $subIterator->offsetGet(CrosstabTreeBuilder::MATRIX_KEY);
-        return $matrix;
-    }
-
-    /**
      * Builds a crosstab or layered crosstab
-     * @param CrosstabVariableCollection $variables
-     * @param RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>> $treeIterator
+     * @param CrosstabTree $tree
      * @return Crosstab
      */
-    private function buildComplex(
-        CrosstabVariableCollection $variables,
-        RecursiveIteratorIterator $treeIterator
-    ): Crosstab {
-        list($firstVariable, $lastVariable) = $variables->getFirstAndLastVariables();
+    private function buildComplex(CrosstabTree $tree): Crosstab
+    {
+        list($firstVariable, $lastVariable) = $tree->getFirstAndLastVariablesInTree();
 
         // a whole lot of ugly...
         $colCategoryCount = count($lastVariable->categories) + 1;
@@ -400,7 +374,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             $firstVariable,
             $lastVariable,
             count($lastVariable->categories) + 1,
-            self::getYAxisWidth($treeIterator)
+            (count($tree) * 2) + 2
         );
 
         $topRowIndex = count($rows);
@@ -431,12 +405,8 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         };
 
         /** @psalm-suppress MixedAssignment */
-        foreach ($treeIterator as $key => $node) {
-            if ($key === CrosstabTreeBuilder::MATRIX_KEY) {
-                break;
-            }
-
-            $depth = $treeIterator->getDepth();
+        foreach ($tree as $node) {
+            $depth = $tree->getDepth();
 
             if (!is_array($node)) {
                 continue;
@@ -569,7 +539,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         }
 
         /** @var array<int, array<int, CrosstabCell>> $rows */
-        return new Crosstab($rows, self::getMatrix($treeIterator));
+        return new Crosstab($rows, $this->treeBuilder->getMatrix($tree));
     }
 
     /**
@@ -620,20 +590,5 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         ]);
 
         return [...$rows, $xAxisRow];
-    }
-
-    /**
-     * Gets the Y axis width for crosstabs and layered crosstabs
-     * @param RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>> $treeIterator
-     * @return positive-int
-     */
-    private static function getYAxisWidth(RecursiveIteratorIterator $treeIterator): int
-    {
-        /** @var RecursiveArrayIterator<array-key, mixed> $innerIterator */
-        $innerIterator = $treeIterator->getInnerIterator();
-        /** @var array<int, array<string, mixed>> $arr */
-        $arr = $innerIterator->getArrayCopy();
-        $descendantCount = (int)CrosstabExtractionUtilities::extractAbsoluteInt('descendantCount', $arr[0]);
-        return ($descendantCount * 2) + 2;
     }
 }

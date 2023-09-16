@@ -44,7 +44,7 @@
     "migrate": "phpunit --migrate-configuration",
     "phpcs": "vendor/bin/phpcs",
     "phpcbf": "vendor/bin/phpcbf",
-    "psalm": "vendor/bin/psalm",
+    "psalm": "vendor/bin/psalm --no-cache",
     "test": "phpunit"
   }
 }
