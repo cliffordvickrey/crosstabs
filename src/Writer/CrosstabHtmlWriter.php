@@ -54,7 +54,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     private const INDENTATION = '    ';
 
     /** @var array<string, int> */
-    private static array $indentations = [
+    protected array $indentations = [
         'colgroup' => 1,
         'col' => 2,
         'div' => 0,
@@ -66,7 +66,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         'tr' => 1
     ];
     /** @var list<string> */
-    private static array $tagsWithNewLines = [
+    protected array $tagsWithNewLines = [
         'div',
         'col',
         'colgroup',
@@ -84,7 +84,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      *     left: list<string>
      * }
      */
-    private static array $classesWithBorders = [
+    protected array $classesWithBorders = [
         'all' => [
             CrosstabCell::APPEARANCE_X_AXIS,
             CrosstabCell::APPEARANCE_X_AXIS_CATEGORY_LABEL,
@@ -105,7 +105,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     ];
 
     /** @var array{center: list<string>, left: list<string>, right: list<string>} */
-    private static array $classesWithTextAlignment = [
+    protected array $classesWithTextAlignment = [
         'center' => [
             CrosstabCell::APPEARANCE_TITLE,
             CrosstabCell::APPEARANCE_X_AXIS,
@@ -117,7 +117,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     ];
 
     /** @var array{top: list<string>, middle: list<string>, bottom: list<string>} */
-    private static array $classesWithVerticalAlignment = [
+    protected array $classesWithVerticalAlignment = [
         'top' => [],
         'middle' => [],
         'bottom' => [CrosstabCell::APPEARANCE_Y_AXIS]
@@ -132,7 +132,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
             return '';
         }
 
-        $options = self::parseOptions($options);
+        $options = $this->parseOptions($options);
         $pretty = (bool)($options[self::PRETTY] ?? true);
         $withDefaultStyles = (bool)($options[self::WITH_DEFAULT_STYLES] ?? true);
         $responsive = (bool)($options[self::RESPONSIVE] ?? false);
@@ -141,13 +141,10 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
 
         if ($responsive) {
             // wrap the table in an X-scrollable div
-            $html = self::openTag('div', $pretty, [
-                'class' => '__crosstab-wrapper',
-                'style' => 'overflow-x:auto'
-            ]);
+            $html = $this->openWrapper($pretty);
         }
 
-        $html .= self::openTag('table', $pretty, $options[self::TABLE_ATTRIBUTES] ?? []);
+        $html .= $this->openTag('table', $pretty, $options[self::TABLE_ATTRIBUTES] ?? []);
 
         $theadOpened = false;
         $theadClosed = false;
@@ -155,32 +152,32 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         foreach ($crosstab as $row) {
             if (!$theadOpened) {
                 // write the col widths and open <thead>
-                $colWidths = self::getColWidths($row->getWidth(), $options);
+                $colWidths = $this->getColWidths($row->getWidth(), $options);
 
-                $html .= self::openTag('colgroup', $pretty);
+                $html .= $this->openTag('colgroup', $pretty);
 
                 foreach ($colWidths as $colWidth) {
-                    $html .= self::openTag('col', $pretty, ['style' => "width:$colWidth;"]);
+                    $html .= $this->openTag('col', $pretty, ['style' => "width:$colWidth;"]);
                 }
 
-                $html .= self::closeTag('colgroup', $pretty);
+                $html .= $this->closeTag('colgroup', $pretty);
 
-                $html .= self::openTag('thead', $pretty, $options[self::THEAD_ATTRIBUTES] ?? []);
+                $html .= $this->openTag('thead', $pretty, $options[self::THEAD_ATTRIBUTES] ?? []);
 
                 $theadOpened = true;
             } elseif (!$theadClosed && !$row->isHeader()) {
                 // close <thead> and open <tbody>
-                $html .= self::closeTag('thead', $pretty);
-                $html .= self::openTag('tbody', $pretty, $options[self::TBODY_ATTRIBUTES] ?? []);
+                $html .= $this->closeTag('thead', $pretty);
+                $html .= $this->openTag('tbody', $pretty, $options[self::TBODY_ATTRIBUTES] ?? []);
                 $theadClosed = true;
             }
 
             // write the row
-            $html .= self::openTag('tr', $pretty, $options[self::TR_ATTRIBUTES] ?? []);
+            $html .= $this->openTag('tr', $pretty, $options[self::TR_ATTRIBUTES] ?? []);
 
             foreach ($row as $cell) {
                 // write the cell
-                $html .= self::writeCell(
+                $html .= $this->writeCell(
                     $cell,
                     $options[$cell->isHeader ? self::TH_ATTRIBUTES : self::TD_ATTRIBUTES] ?? [],
                     $pretty,
@@ -189,17 +186,17 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
             }
 
             // close the row
-            $html .= self::closeTag('tr', $pretty);
+            $html .= $this->closeTag('tr', $pretty);
         }
 
         // close all open tags
         if ($theadClosed) {
-            $html .= self::closeTag('tbody', $pretty);
+            $html .= $this->closeTag('tbody', $pretty);
         } elseif ($theadOpened) {
-            $html .= self::closeTag('thead', $pretty);
+            $html .= $this->closeTag('thead', $pretty);
         }
 
-        return trim($html . self::closeTag('table', $pretty) . ($responsive ? self::closeTag('div', $pretty) : ''));
+        return trim($html . $this->closeTag('table', $pretty) . ($responsive ? $this->closeTag('div', $pretty) : ''));
     }
 
     /**
@@ -207,7 +204,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param array<string, mixed> $options
      * @return array<string, mixed>
      */
-    private static function parseOptions(array $options): array
+    protected function parseOptions(array $options): array
     {
         $withDefaultStyles = (bool)($options[self::WITH_DEFAULT_STYLES] ?? true);
 
@@ -235,13 +232,25 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     }
 
     /**
+     * @param bool $pretty
+     * @return string
+     */
+    protected function openWrapper(bool $pretty): string
+    {
+        return $this->openTag('div', $pretty, [
+            'class' => '__crosstab-wrapper',
+            'style' => 'overflow-x:auto'
+        ]);
+    }
+
+    /**
      * Opens an HTML tag
      * @param literal-string $tagName Literal, because we don't escape it!
      * @param bool $pretty
      * @param mixed $attributes
      * @return string
      */
-    private static function openTag(string $tagName, bool $pretty, mixed $attributes = []): string
+    protected function openTag(string $tagName, bool $pretty, mixed $attributes = []): string
     {
         if (is_object($attributes)) {
             $attributes = (array)$attributes;
@@ -251,7 +260,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
             $attributes = [];
         }
 
-        $indentation = self::$indentations[$tagName] ?? 0;
+        $indentation = $this->indentations[$tagName] ?? 0;
 
         $html = ($pretty ? str_repeat(self::INDENTATION, $indentation) : '') . "<$tagName";
 
@@ -263,13 +272,13 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
                 continue;
             }
 
-            $propHtml = self::htmlEncode($prop);
-            $valueHtml = self::htmlEncode(CrosstabCastingUtilities::toString($value));
+            $propHtml = $this->htmlEncode($prop);
+            $valueHtml = $this->htmlEncode(CrosstabCastingUtilities::toString($value));
 
             $html .= " $propHtml=\"$valueHtml\"";
         }
 
-        $eol = ($pretty && in_array($tagName, self::$tagsWithNewLines)) ? PHP_EOL : '';
+        $eol = ($pretty && in_array($tagName, $this->tagsWithNewLines)) ? PHP_EOL : '';
 
         return "$html>" . $eol;
     }
@@ -278,7 +287,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param string $textContent
      * @return string
      */
-    private static function htmlEncode(string $textContent): string
+    protected function htmlEncode(string $textContent): string
     {
         return htmlentities($textContent, ENT_QUOTES);
     }
@@ -289,7 +298,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param array<string, mixed> $options
      * @return list<non-empty-string>
      */
-    private function getColWidths(int $width, array $options): array
+    protected function getColWidths(int $width, array $options): array
     {
         $colWidthFactors = (array_key_exists(self::COL_WIDTH_FACTORS, $options)
             && is_array($options[self::COL_WIDTH_FACTORS])) ? $options[self::COL_WIDTH_FACTORS] : [];
@@ -313,11 +322,11 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param bool $pretty
      * @return string
      */
-    private static function closeTag(string $tagName, bool $pretty): string
+    protected function closeTag(string $tagName, bool $pretty): string
     {
-        $indentation = self::$indentations[$tagName] ?? 0;
+        $indentation = $this->indentations[$tagName] ?? 0;
 
-        if (!$pretty || !in_array($tagName, self::$tagsWithNewLines)) {
+        if (!$pretty || !in_array($tagName, $this->tagsWithNewLines)) {
             $indentation = 0;
         }
 
@@ -331,19 +340,19 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param bool $withDefaultStyles
      * @return string
      */
-    private static function writeCell(
+    protected function writeCell(
         CrosstabCell $cell,
         mixed $defaultAttributes,
         bool $pretty,
         bool $withDefaultStyles
     ): string {
-        $attributes = self::getCellAttributes($cell, $defaultAttributes, $withDefaultStyles);
+        $attributes = $this->getCellAttributes($cell, $defaultAttributes, $withDefaultStyles);
 
-        $innerHtml = self::htmlEncode($cell->textContent);
+        $innerHtml = $this->htmlEncode($cell->textContent);
 
         $tagName = $cell->isHeader ? 'th' : 'td';
 
-        return self::openTag($tagName, $pretty, $attributes) . $innerHtml . self::closeTag($tagName, $pretty);
+        return $this->openTag($tagName, $pretty, $attributes) . $innerHtml . $this->closeTag($tagName, $pretty);
     }
 
     /**
@@ -353,7 +362,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param bool $withDefaultStyles
      * @return array<string, mixed>
      */
-    private static function getCellAttributes(
+    protected function getCellAttributes(
         CrosstabCell $cell,
         mixed $defaultAttributes,
         bool $withDefaultStyles
@@ -399,9 +408,9 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         $classes = array_values(array_filter(explode(' ', $class)));
 
         $attr['style'] = $style
-            . self::getBorderStyle($classes)
-            . self::getTextAlignStyle($classes)
-            . self::getVerticalAlignStyle($classes);
+            . $this->getBorderStyle($classes)
+            . $this->getTextAlignStyle($classes)
+            . $this->getVerticalAlignStyle($classes);
 
         return $attr;
     }
@@ -411,26 +420,9 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param list<string> $classes
      * @return string
      */
-    private static function getBorderStyle(array $classes): string
+    protected function getBorderStyle(array $classes): string
     {
-        $border = ['top' => false, 'right' => false, 'bottom' => false, 'left' => false];
-
-        $borderTypes = array_keys($border);
-
-        foreach ($classes as $class) {
-            if (in_array($class, self::$classesWithBorders['all'])) {
-                $border = ['top' => true, 'right' => true, 'bottom' => true, 'left' => true];
-                break;
-            }
-
-            foreach ($borderTypes as $borderType) {
-                if (in_array($class, self::$classesWithBorders[$borderType])) {
-                    $border[$borderType] = true;
-                }
-            }
-        }
-
-        $border = array_filter($border);
+        $border = $this->extractBordersFromClasses($classes);
 
         if (0 === count($border)) {
             return '';
@@ -452,18 +444,44 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     }
 
     /**
+     * @param list<string> $classes
+     * @return array{top?: true, right?: true, bottom?: true, left?: true}
+     */
+    protected function extractBordersFromClasses(array $classes): array
+    {
+        $border = ['top' => false, 'right' => false, 'bottom' => false, 'left' => false];
+
+        $borderTypes = array_keys($border);
+
+        foreach ($classes as $class) {
+            if (in_array($class, $this->classesWithBorders['all'])) {
+                $border = ['top' => true, 'right' => true, 'bottom' => true, 'left' => true];
+                break;
+            }
+
+            foreach ($borderTypes as $borderType) {
+                if (in_array($class, $this->classesWithBorders[$borderType])) {
+                    $border[$borderType] = true;
+                }
+            }
+        }
+
+        return array_filter($border);
+    }
+
+    /**
      * Resolve a table cell's text alignment CSS
      * @param list<string> $classes
      * @return string
      */
-    private static function getTextAlignStyle(array $classes): string
+    protected function getTextAlignStyle(array $classes): string
     {
         foreach ($classes as $class) {
-            if (in_array($class, self::$classesWithTextAlignment['center'])) {
+            if (in_array($class, $this->classesWithTextAlignment['center'])) {
                 return ';text-align:center';
             }
 
-            if (in_array($class, self::$classesWithTextAlignment['right'])) {
+            if (in_array($class, $this->classesWithTextAlignment['right'])) {
                 return ';text-align:right';
             }
         }
@@ -476,14 +494,14 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      * @param list<string> $classes
      * @return string
      */
-    private static function getVerticalAlignStyle(array $classes): string
+    protected function getVerticalAlignStyle(array $classes): string
     {
         foreach ($classes as $class) {
-            if (in_array($class, self::$classesWithVerticalAlignment['bottom'])) {
+            if (in_array($class, $this->classesWithVerticalAlignment['bottom'])) {
                 return ';vertical-align:bottom';
             }
 
-            if (in_array($class, self::$classesWithVerticalAlignment['middle'])) {
+            if (in_array($class, $this->classesWithVerticalAlignment['middle'])) {
                 return ';vertical-align:middle';
             }
         }
@@ -499,11 +517,19 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      */
     protected function prepareOutputForFile(string $output, array $options): string
     {
-        $tpl = $this->fileGetContents(__DIR__ . '/../../templates/crosstab.html');
+        $tpl = $this->getTemplate();
 
         $lang = CrosstabExtractionUtilities::extractString(self::HTML_LANG, $options) ?: 'en';
         $title = CrosstabExtractionUtilities::extractString(self::HTML_HEAD_TITLE, $options) ?: 'Crosstab';
 
         return str_replace(['%lang%', '%title%', '%crosstab%'], [$lang, $title, $output], $tpl);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getTemplate(): string
+    {
+        return $this->fileGetContents(__DIR__ . '/../../templates/crosstab.html');
     }
 }

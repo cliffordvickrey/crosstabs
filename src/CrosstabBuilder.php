@@ -74,13 +74,13 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             return $this->buildEmptyCrossTab();
         }
 
-        $variables = $this->buildVariableCollection($sourceData);
+        $variables = $this->collectVariables($sourceData);
 
         if (!$variables->isValid()) {
             return $this->buildEmptyCrossTab();
         }
 
-        $totals = $this->getTotals($variables, $sourceData);
+        $totals = $this->tabulate($variables, $sourceData);
 
         $treeIterator = $this->buildTree($variables, $totals);
 
@@ -152,7 +152,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
      * @param CrosstabSourceDataCollection $sourceData
      * @return CrosstabVariableCollection
      */
-    private function buildVariableCollection(CrosstabSourceDataCollection $sourceData): CrosstabVariableCollection
+    private function collectVariables(CrosstabSourceDataCollection $sourceData): CrosstabVariableCollection
     {
         $parsedVariables = [];
 
@@ -249,7 +249,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
      * @param CrosstabSourceDataCollection $sourceData
      * @return array{n: array<string, float>, weightedN: array<string, float>}
      */
-    private function getTotals(CrosstabVariableCollection $variables, CrosstabSourceDataCollection $sourceData): array
+    private function tabulate(CrosstabVariableCollection $variables, CrosstabSourceDataCollection $sourceData): array
     {
         if (0 === count($variables)) {
             throw new CrosstabLogicException('Variables cannot be empty');
@@ -680,45 +680,13 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         $variableDepthByDepth = [];
         $variableFlushed = false;
         $variableNodeByDepth = [];
-        $xAxisWidth = count($lastVariable->categories) + 1;
-        $yAxisWidth = self::getYAxisWidth($treeIterator);
-        $tableWidth = $yAxisWidth + $xAxisWidth;
 
-        // region header
-        /** @var array<int, array<int, CrosstabCell>> $rows */
-        $rows = [];
-
-        if (null !== $this->title) {
-            $rows[] = [CrosstabCell::header($this->title, $tableWidth, attributes: [
-                'class' => CrosstabCell::APPEARANCE_TITLE])
-            ];
-        }
-
-        $rows[] = [
-            CrosstabCell::header($firstVariable->description, $yAxisWidth, 2, attributes: [
-                'class' => CrosstabCell::APPEARANCE_Y_AXIS
-            ]),
-            CrosstabCell::header($lastVariable->description, $xAxisWidth, attributes: [
-                'class' => CrosstabCell::APPEARANCE_X_AXIS
-            ])
-        ];
-
-        $xAxisRow = [];
-
-        foreach ($lastVariable->categories as $category) {
-            $xAxisRow[] = CrosstabCell::header($category->description, attributes: [
-                'class' => CrosstabCell::APPEARANCE_X_AXIS_CATEGORY_LABEL
-            ]);
-        }
-
-        $xAxisRow[] = CrosstabCell::header($this->messageTotal, attributes: [
-            'class' => CrosstabCell::APPEARANCE_X_AXIS_CATEGORY_LABEL
-                . ' '
-                . CrosstabCell::APPEARANCE_TOTAL_LABEL
-        ]);
-
-        $rows[] = $xAxisRow;
-        // endregion
+        $rows = $this->buildCrosstabHeader(
+            $firstVariable,
+            $lastVariable,
+            count($lastVariable->categories) + 1,
+            self::getYAxisWidth($treeIterator)
+        );
 
         $topRowIndex = count($rows);
 
@@ -887,6 +855,56 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
         /** @var array<int, array<int, CrosstabCell>> $rows */
         return new Crosstab($rows, self::getMatrix($treeIterator));
+    }
+
+    /**
+     * @param CrosstabVariable $rowVariable
+     * @param CrosstabVariable $colVariable
+     * @param positive-int $xAxisWidth
+     * @param positive-int $yAxisWidth
+     * @return array<int, array<int, CrosstabCell>>
+     */
+    private function buildCrosstabHeader(
+        CrosstabVariable $rowVariable,
+        CrosstabVariable $colVariable,
+        int $xAxisWidth,
+        int $yAxisWidth
+    ): array {
+        $tableWidth = $xAxisWidth + $yAxisWidth;
+
+        /** @var array<int, array<int, CrosstabCell>> $rows */
+        $rows = [];
+
+        if (null !== $this->title) {
+            $rows[] = [CrosstabCell::header($this->title, $tableWidth, attributes: [
+                'class' => CrosstabCell::APPEARANCE_TITLE])
+            ];
+        }
+
+        $rows[] = [
+            CrosstabCell::header($colVariable->description, $yAxisWidth, 2, attributes: [
+                'class' => CrosstabCell::APPEARANCE_Y_AXIS
+            ]),
+            CrosstabCell::header($rowVariable->description, $xAxisWidth, attributes: [
+                'class' => CrosstabCell::APPEARANCE_X_AXIS
+            ])
+        ];
+
+        $xAxisRow = [];
+
+        foreach ($colVariable->categories as $category) {
+            $xAxisRow[] = CrosstabCell::header($category->description, attributes: [
+                'class' => CrosstabCell::APPEARANCE_X_AXIS_CATEGORY_LABEL
+            ]);
+        }
+
+        $xAxisRow[] = CrosstabCell::header($this->messageTotal, attributes: [
+            'class' => CrosstabCell::APPEARANCE_X_AXIS_CATEGORY_LABEL
+                . ' '
+                . CrosstabCell::APPEARANCE_TOTAL_LABEL
+        ]);
+
+        return [...$rows, $xAxisRow];
     }
 
     /**

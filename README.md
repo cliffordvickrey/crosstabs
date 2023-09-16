@@ -57,6 +57,10 @@ $crosstab = $builder->build();
 // display the crosstab as HTML (see example output below)
 echo $crosstab->write();
 
+// if you use a Bootstrap layout and want a table with all the fancy utility classes, etc., you can override the default
+// writer like so:
+echo $crosstab->write(writer: new \CliffordVickrey\Crosstabs\Writer\CrosstabBootstrapHtmlWriter());
+
 // some inferential stats. Degrees of freedom are equal to the number of columns (minus 1) multiplied by the number of
 // rows (minus 1). Chi-squared is a test statistic, comparing actual values with ones we'd expect if no relationship
 // existed between the row and column variables
@@ -66,7 +70,7 @@ var_dump($crosstab->getChiSquared()); // 598.35 (clearly significant!)
 // now: let's add third dimension: device type
 $builder->setTitle('Browser Usage by Platform by Device Type');
 $builder->addLayer('Device Type');
-// percentages will be of columns within each layer category; great for visualizing control variables
+// percentages will be of columns within each layer category; great for visualizing the effects of control variables
 $builder->setPercentType(\CliffordVickrey\Crosstabs\Options\CrosstabPercentType::COLUMN_WITHIN_LAYER);
 $crosstab = $builder->build();
 echo $crosstab->write();
@@ -259,6 +263,7 @@ Sets an optional title to appear in the table header. Defaults to `NULL` (i.e., 
 Encapsulates the data and presentation elements of a crosstab. Implements `\Traversable`; traversal will return row 
 objects (`CliffordVickrey\Crosstabs\Crosstab\CrosstabRow`), which themselves provide cell objects
 (`CliffordVickrey\Crosstabs\Crosstab\CrosstabRow`) when traversed. These cells contain the table's presentation data,
+whereas the matrix (exposed by a getter) contains the tabulated data.
 
 #### `@getCell(int $x, int $y): ?CrosstabCell`
 
