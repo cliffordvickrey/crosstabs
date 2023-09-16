@@ -153,6 +153,14 @@ final readonly class CrosstabVariableCollection implements Countable, IteratorAg
     }
 
     /**
+     * @return list<CrosstabVariable>
+     */
+    public function toArray(): array
+    {
+        return $this->variables;
+    }
+
+    /**
      * @param array<array-key, mixed> $an_array
      * @return self
      * @psalm-suppress MixedAssignment

@@ -14,7 +14,10 @@ use function array_flip;
 use function array_intersect_key;
 use function http_build_query;
 
-class CrosstabTabulator implements CrosstabTabulatorInterface
+/**
+ * @internal
+ */
+final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
 {
     /**
      * @inheritDoc

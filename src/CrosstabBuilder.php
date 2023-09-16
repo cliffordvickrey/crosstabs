@@ -10,13 +10,14 @@ use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Exception\CrosstabInvalidArgumentException;
 use CliffordVickrey\Crosstabs\Helper\CrosstabTabulator;
 use CliffordVickrey\Crosstabs\Helper\CrosstabTabulatorInterface;
+use CliffordVickrey\Crosstabs\Helper\CrosstabTreeBuilder;
+use CliffordVickrey\Crosstabs\Helper\CrosstabTreeBuilderInterface;
 use CliffordVickrey\Crosstabs\Helper\CrosstabVariableCollector;
 use CliffordVickrey\Crosstabs\Helper\CrosstabVariableCollectorInterface;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterFlyweight;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterFlyweightInterface;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterType;
 use CliffordVickrey\Crosstabs\Options\CrosstabOptions;
-use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
@@ -26,14 +27,12 @@ use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
-use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
 use function array_key_exists;
 use function array_key_last;
 use function array_keys;
 use function count;
-use function http_build_query;
 use function in_array;
 use function is_array;
 use function is_int;
@@ -41,24 +40,26 @@ use function max;
 
 class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterface
 {
-    private const MATRIX_KEY = '__matrix';
-
     private readonly CrosstabNumberFormatterFlyweightInterface $formatterFlyweight;
     private readonly CrosstabTabulatorInterface $tabulator;
+    private readonly CrosstabTreeBuilderInterface $treeBuilder;
     private readonly CrosstabVariableCollectorInterface $variableCollector;
 
     /**
      * @param CrosstabNumberFormatterFlyweightInterface|null $formatterFlyweight
      * @param CrosstabTabulatorInterface|null $tabulator
+     * @param CrosstabTreeBuilderInterface|null $treeBuilder
      * @param CrosstabVariableCollectorInterface|null $variableCollector
      */
     public function __construct(
         ?CrosstabNumberFormatterFlyweightInterface $formatterFlyweight = null,
         ?CrosstabTabulatorInterface $tabulator = null,
+        ?CrosstabTreeBuilderInterface $treeBuilder = null,
         ?CrosstabVariableCollectorInterface $variableCollector = null
     ) {
         $this->formatterFlyweight = $formatterFlyweight ?? new CrosstabNumberFormatterFlyweight();
         $this->tabulator = $tabulator ?? new CrosstabTabulator();
+        $this->treeBuilder = $treeBuilder ?? new CrosstabTreeBuilder();
         $this->variableCollector = $variableCollector ?? new CrosstabVariableCollector();
     }
 
@@ -180,182 +181,21 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
     }
 
     /**
-     * Recursively iterates through the variable tree and populates it with data
      * @param CrosstabVariableCollection $variables
      * @param array{n: array<string, float>, weightedN: array<string, float>} $totals
      * @return RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>>
-     * @psalm-suppress UnnecessaryVarAnnotation
      */
-    private function buildTree(CrosstabVariableCollection $variables, array $totals): RecursiveIteratorIterator
-    {
-        $matrix = [];
-        $counter = 0;
-        $y = -1;
-
-        /** @var RecursiveArrayIterator<array-key, mixed> $arrayIterator */
-        $arrayIterator = new RecursiveArrayIterator($variables->toTree(messageTotal: $this->messageTotal));
-        $treeIterator = new RecursiveIteratorIterator($arrayIterator, RecursiveIteratorIterator::SELF_FIRST);
-
-        $lastVariableObj = $variables->getFirstAndLastVariables()[1];
-        $lastVariable = $lastVariableObj->name;
-        $cols = count($lastVariableObj->categories);
-
-        $query = [];
-        $currentVariable = '';
-
-        $totalN = $totals['n'][''] ?? 0.0;
-        $totalWeightedN = $totals['weightedN'][''] ?? 0.0;
-
-        $variablesByDepth = [];
-
-        foreach ($treeIterator as $node) {
-            if (!is_array($node)) {
-                continue;
-            }
-
-            $depth = $treeIterator->getDepth();
-
-            if (!isset($variablesByDepth[$depth])) {
-                $variablesByDepth[$depth] = $currentVariable;
-            } else {
-                $currentVariable = $variablesByDepth[$depth];
-            }
-
-            if (isset($node['variableName'])) {
-                $currentVariable = CrosstabExtractionUtilities::extractString('variableName', $node);
-                $variablesByDepth[$depth] = CrosstabExtractionUtilities::extractString('variableName', $node);
-                continue;
-            }
-
-            if (isset($node['categoryName'])) {
-                $category = CrosstabExtractionUtilities::extractString('categoryName', $node);
-                $isTotal = (bool)($node['isTotal'] ?? false);
-                $query[$currentVariable] = $isTotal ? null : $category;
-                continue;
-            }
-
-            if (!isset($node[CrosstabDataItem::FREQUENCY])) {
-                continue;
-            }
-
-            $key = http_build_query($query);
-            $n = $totals['n'][$key] ?? 0.0;
-
-            $weightedN = $totals['weightedN'][$key] ?? 0.0;
-
-            $rowSubTotalKey = http_build_query(array_diff_key($query, [$lastVariable => true]));
-            $rowSubTotalN = $totals['n'][$rowSubTotalKey] ?? 0.0;
-            $rowSubTotalWeightedN = $totals['weightedN'][$rowSubTotalKey] ?? 0.0;
-
-            $colSubTotalKey = http_build_query(array_intersect_key($query, [$lastVariable => true]));
-            $colSubTotalN = $totals['n'][$colSubTotalKey] ?? 0.0;
-            $colSubTotalWeightedN = $totals['weightedN'][$colSubTotalKey] ?? 0.0;
-
-            $expectedN = CrosstabMathUtilities::multiply(
-                $colSubTotalN,
-                (float)CrosstabMathUtilities::divide(
-                    $rowSubTotalN,
-                    $totalN,
-                    $this->mathematicalScale
-                ),
-                $this->mathematicalScale
-            );
-
-            $expectedWeightedN = CrosstabMathUtilities::multiply(
-                $colSubTotalWeightedN,
-                (float)CrosstabMathUtilities::divide(
-                    $rowSubTotalWeightedN,
-                    $totalWeightedN,
-                    $this->mathematicalScale
-                ),
-                $this->mathematicalScale
-            );
-
-            switch ($this->percentType) {
-                case CrosstabPercentType::COLUMN:
-                    $percentDivisor = $colSubTotalN;
-                    $percentDivisorWeighted = $colSubTotalWeightedN;
-                    break;
-                case CrosstabPercentType::COLUMN_WITHIN_LAYER:
-                    $totalColWithinLayerKey = http_build_query(array_diff_key($query, [
-                        (string)$this->rowVariableName => true
-                    ]));
-                    $percentDivisor = $totals['n'][$totalColWithinLayerKey] ?? 0.0;
-                    $percentDivisorWeighted = $totals['weightedN'][$totalColWithinLayerKey] ?? 0.0;
-                    break;
-                case CrosstabPercentType::ROW:
-                    $percentDivisor = $rowSubTotalN;
-                    $percentDivisorWeighted = $rowSubTotalWeightedN;
-                    break;
-                case CrosstabPercentType::TOTAL_WITHIN_LAYER:
-                    $totalWithinLayerKey = http_build_query(array_diff_key($query, [
-                        (string)$this->rowVariableName => true,
-                        (string)$this->colVariableName => true
-                    ]));
-                    $percentDivisor = $totals['n'][$totalWithinLayerKey] ?? 0.0;
-                    $percentDivisorWeighted = $totals['weightedN'][$totalWithinLayerKey] ?? 0.0;
-                    break;
-                default:
-                    $percentDivisor = $totalN;
-                    $percentDivisorWeighted = $totalWeightedN;
-            }
-
-            /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-            $subIterator = $treeIterator->getSubIterator();
-
-            $item = CrosstabDataItem::__set_state([
-                CrosstabDataItem::EXPECTED_FREQUENCY => $expectedN,
-                CrosstabDataItem::EXPECTED_PERCENT => CrosstabMathUtilities::divide(
-                    $expectedN,
-                    $percentDivisor,
-                    $this->mathematicalScale
-                ),
-                CrosstabDataItem::FREQUENCY => $n,
-                CrosstabDataItem::IS_TOTAL => count(array_filter($query, is_null(...))) > 0,
-                CrosstabDataItem::PARAMS => $key,
-                CrosstabDataItem::PERCENT => CrosstabMathUtilities::divide(
-                    $n,
-                    $percentDivisor,
-                    $this->mathematicalScale
-                ),
-                CrosstabDataItem::WEIGHTED_EXPECTED_FREQUENCY => $expectedWeightedN,
-                CrosstabDataItem::WEIGHTED_EXPECTED_PERCENT => CrosstabMathUtilities::divide(
-                    $expectedWeightedN,
-                    $percentDivisorWeighted,
-                    $this->mathematicalScale
-                ),
-                CrosstabDataItem::WEIGHTED_FREQUENCY => $weightedN,
-                CrosstabDataItem::WEIGHTED_PERCENT => CrosstabMathUtilities::divide(
-                    $weightedN,
-                    $percentDivisorWeighted,
-                    $this->mathematicalScale
-                ),
-            ]);
-
-            $subIterator->offsetSet('children', $item->toArray());
-
-            if ($item->isTotal) {
-                continue;
-            }
-
-            if (0 === $counter % $cols) {
-                $y++;
-            }
-
-            if (!isset($matrix[$y])) {
-                $matrix[$y] = [];
-            }
-
-            $matrix[$y][] = $item;
-
-            $counter++;
-        }
-
-        // hack: store the rectangular matrix of data items at the top of the tree
-        /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-        $subIterator = $treeIterator->getSubIterator(0);
-        $subIterator->offsetSet(self::MATRIX_KEY, $matrix);
-        return $treeIterator;
+    private function buildTree(
+        CrosstabVariableCollection $variables,
+        array $totals
+    ): RecursiveIteratorIterator {
+        return $this->treeBuilder->buildTree(
+            $variables,
+            $totals,
+            $this->percentType,
+            $this->messageTotal,
+            $this->mathematicalScale
+        );
     }
 
     /**
@@ -408,7 +248,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
         /** @psalm-suppress MixedAssignment */
         foreach ($treeIterator as $key => $node) {
-            if ($key === self::MATRIX_KEY) {
+            if ($key === CrosstabTreeBuilder::MATRIX_KEY) {
                 break;
             }
 
@@ -524,7 +364,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
         $subIterator = $treeIterator->getSubIterator(0);
         /** @var list<list<CrosstabDataItem>> $matrix */
-        $matrix = $subIterator->offsetGet(self::MATRIX_KEY);
+        $matrix = $subIterator->offsetGet(CrosstabTreeBuilder::MATRIX_KEY);
         return $matrix;
     }
 
@@ -592,7 +432,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
         /** @psalm-suppress MixedAssignment */
         foreach ($treeIterator as $key => $node) {
-            if ($key === self::MATRIX_KEY) {
+            if ($key === CrosstabTreeBuilder::MATRIX_KEY) {
                 break;
             }
 
