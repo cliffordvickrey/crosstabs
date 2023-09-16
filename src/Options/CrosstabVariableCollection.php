@@ -14,7 +14,6 @@ use Traversable;
 
 use function array_key_first;
 use function array_key_last;
-use function array_reverse;
 use function array_shift;
 use function count;
 use function is_iterable;
@@ -239,34 +238,5 @@ final readonly class CrosstabVariableCollection implements Countable, IteratorAg
         }
 
         return $count;
-    }
-
-    /**
-     * Orders variables by where they appear in the grid, from left to right
-     * @return self
-     */
-    public function inLeftToRightOrder(): self
-    {
-        if (count($this->variables) < 2) {
-            return $this;
-        }
-
-        $xKey = 1;
-
-        $x = $this->variables[$xKey];
-
-        $y = [];
-
-        foreach ($this->variables as $k => $variable) {
-            if ($k === $xKey) {
-                continue;
-            }
-
-            $y[] = $variable;
-        }
-
-        $y = array_reverse($y);
-
-        return new self([...$y, $x]); // layers, then row variable, then column variable
     }
 }

@@ -8,11 +8,13 @@ use CliffordVickrey\Crosstabs\Crosstab\Crosstab;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabCell;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Exception\CrosstabInvalidArgumentException;
-use CliffordVickrey\Crosstabs\Exception\CrosstabLogicException;
+use CliffordVickrey\Crosstabs\Helper\CrosstabTabulator;
+use CliffordVickrey\Crosstabs\Helper\CrosstabTabulatorInterface;
+use CliffordVickrey\Crosstabs\Helper\CrosstabVariableCollector;
+use CliffordVickrey\Crosstabs\Helper\CrosstabVariableCollectorInterface;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterFlyweight;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterFlyweightInterface;
 use CliffordVickrey\Crosstabs\NumberFormatting\CrosstabNumberFormatterType;
-use CliffordVickrey\Crosstabs\Options\CrosstabCategory;
 use CliffordVickrey\Crosstabs\Options\CrosstabOptions;
 use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
@@ -26,39 +28,38 @@ use RecursiveIteratorIterator;
 
 use function array_diff_key;
 use function array_filter;
-use function array_flip;
 use function array_intersect_key;
 use function array_key_exists;
 use function array_key_last;
 use function array_keys;
-use function array_merge;
-use function array_reduce;
-use function array_values;
 use function count;
 use function http_build_query;
 use function in_array;
 use function is_array;
 use function is_int;
 use function max;
-use function strnatcasecmp;
-use function usort;
 
 class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterface
 {
     private const MATRIX_KEY = '__matrix';
 
     private readonly CrosstabNumberFormatterFlyweightInterface $formatterFlyweight;
+    private readonly CrosstabTabulatorInterface $tabulator;
+    private readonly CrosstabVariableCollectorInterface $variableCollector;
 
     /**
      * @param CrosstabNumberFormatterFlyweightInterface|null $formatterFlyweight
+     * @param CrosstabTabulatorInterface|null $tabulator
+     * @param CrosstabVariableCollectorInterface|null $variableCollector
      */
-    public function __construct(?CrosstabNumberFormatterFlyweightInterface $formatterFlyweight = null)
-    {
-        if (null === $formatterFlyweight) {
-            $formatterFlyweight = new CrosstabNumberFormatterFlyweight();
-        }
-
-        $this->formatterFlyweight = $formatterFlyweight;
+    public function __construct(
+        ?CrosstabNumberFormatterFlyweightInterface $formatterFlyweight = null,
+        ?CrosstabTabulatorInterface $tabulator = null,
+        ?CrosstabVariableCollectorInterface $variableCollector = null
+    ) {
+        $this->formatterFlyweight = $formatterFlyweight ?? new CrosstabNumberFormatterFlyweight();
+        $this->tabulator = $tabulator ?? new CrosstabTabulator();
+        $this->variableCollector = $variableCollector ?? new CrosstabVariableCollector();
     }
 
     /**
@@ -80,7 +81,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             return $this->buildEmptyCrossTab();
         }
 
-        $totals = $this->tabulate($variables, $sourceData);
+        $totals = $this->tabulator->tabulate($variables, $sourceData);
 
         $treeIterator = $this->buildTree($variables, $totals);
 
@@ -154,154 +155,28 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
      */
     private function collectVariables(CrosstabSourceDataCollection $sourceData): CrosstabVariableCollection
     {
-        $parsedVariables = [];
-
-        $variables = array_values(array_filter([$this->buildRowVariable(), $this->buildColVariable()]));
-
-        foreach ($this->layers as $layer) {
-            $variables[] = $layer;
-        }
-
-        foreach ($variables as $variable) {
-            $sort = empty($variable->categories);
-
-            $categoriesIndexedByName = array_reduce(
-                $variable->categories,
-                static fn(array $carry, CrosstabCategory $category) => array_merge(
-                    $carry,
-                    [$category->name => $category]
-                ),
-                []
-            );
-
-            $nonEmptyCategoriesIndexedByName = [];
-
-            foreach ($sourceData as $row) {
-                $value = CrosstabCastingUtilities::toString($row->getValue($variable->name));
-
-                if ('' === $value) {
-                    continue;
-                }
-
-                $nonEmptyCategoriesIndexedByName[$value] = true;
-
-                if (isset($categoriesIndexedByName[$value])) {
-                    continue;
-                }
-
-                $categoriesIndexedByName[$value] = new CrosstabCategory($value);
-            }
-
-            /** @var list<CrosstabCategory> $categories */
-            $categories = array_values(array_intersect_key($categoriesIndexedByName, $nonEmptyCategoriesIndexedByName));
-
-            if ($sort) {
-                usort($categories, static function (CrosstabCategory $a, CrosstabCategory $b) {
-                    $compA = strnatcasecmp($a->description, $b->description);
-
-                    if (0 !== $compA) {
-                        return $compA;
-                    }
-
-                    return strnatcasecmp($a->name, $b->name);
-                });
-            }
-
-            $parsedVariables[] = new CrosstabVariable($variable->name, $variable->description, $categories);
-        }
-
-        return CrosstabVariableCollection::__set_state($parsedVariables)->inLeftToRightOrder();
-    }
-
-    /**
-     * Encapsulates the row variable as an object
-     * @return CrosstabVariable
-     */
-    private function buildRowVariable(): CrosstabVariable
-    {
-        return CrosstabVariable::__set_state([
-            'name' => (string)$this->rowVariableName,
+        $rowVarData = [
+            'name' => $this->rowVariableName,
             'description' => $this->rowVariableDescription,
             'categories' => $this->rowVariableCategories
-        ]);
-    }
+        ];
 
-    /**
-     * Encapsulates the column variable as an object
-     * @return CrosstabVariable|null
-     */
-    private function buildColVariable(): ?CrosstabVariable
-    {
-        if (null === $this->colVariableName) {
-            return null;
+        $colVarData = [];
+
+        if (null !== $this->colVariableName) {
+            $colVarData = [
+                'name' => $this->colVariableName,
+                'description' => $this->colVariableDescription,
+                'categories' => $this->colVariableCategories
+            ];
         }
 
-        return CrosstabVariable::__set_state([
-            'name' => $this->colVariableName,
-            'description' => $this->colVariableDescription,
-            'categories' => $this->colVariableCategories
-        ]);
-    }
-
-    /**
-     * Tabulates the frequency and weighted frequency of every possible combination of variable categories
-     * @param CrosstabVariableCollection $variables
-     * @param CrosstabSourceDataCollection $sourceData
-     * @return array{n: array<string, float>, weightedN: array<string, float>}
-     */
-    private function tabulate(CrosstabVariableCollection $variables, CrosstabSourceDataCollection $sourceData): array
-    {
-        if (0 === count($variables)) {
-            throw new CrosstabLogicException('Variables cannot be empty');
-        }
-
-        $totals = ['n' => [], 'weightedN' => []];
-
-        foreach ($sourceData as $sourceRow) {
-            $fullQuery = [];
-            $elements = [];
-
-            foreach ($variables as $variable) {
-                $value = CrosstabCastingUtilities::toString($sourceRow->getValue($variable->name));
-
-                if ('' === $value) {
-                    continue 2;
-                }
-
-                $fullQuery[$variable->name] = $value;
-                $elements[] = $variable->name;
-            }
-
-            $powerSet = CrosstabMathUtilities::getPowerSet($elements);
-
-            foreach ($powerSet as $elementsInPowerSet) {
-                $query = array_intersect_key($fullQuery, array_flip($elementsInPowerSet));
-
-                $key = http_build_query($query);
-
-                if (!isset($totals['n'][$key])) {
-                    $totals['n'][$key] = (float)$sourceRow->n;
-                } else {
-                    $totals['n'][$key] = CrosstabMathUtilities::add(
-                        $totals['n'][$key],
-                        (float)$sourceRow->n,
-                        $this->mathematicalScale
-                    );
-                }
-
-                if (!isset($totals['weightedN'][$key])) {
-                    $totals['weightedN'][$key] = (float)$sourceRow->weightedN;
-                } else {
-                    $totals['weightedN'][$key] = CrosstabMathUtilities::add(
-                        $totals['weightedN'][$key],
-                        (float)$sourceRow->weightedN,
-                        $this->mathematicalScale
-                    );
-                }
-            }
-        }
-
-        return $totals;
+        return $this->variableCollector->collectVariables(
+            $sourceData,
+            $rowVarData,
+            $colVarData,
+            $this->layers
+        );
     }
 
     /**
