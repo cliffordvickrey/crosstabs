@@ -10,9 +10,8 @@ use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
-use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
+use CliffordVickrey\Crosstabs\Tree\CrosstabTreeCategoryPayload;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
-use RecursiveArrayIterator;
 use WeakMap;
 
 use function array_diff_key;
@@ -20,7 +19,6 @@ use function array_filter;
 use function array_intersect_key;
 use function array_pop;
 use function http_build_query;
-use function is_array;
 
 /**
  * @internal
@@ -41,6 +39,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 
     /**
      * @inheritDoc
+     * @todo consider using the visitor pattern instead of iteration/type juggling
      */
     public function buildTree(
         CrosstabVariableCollection $variables,
@@ -55,9 +54,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 
         $tree = new CrosstabTree($variables, $messageTotal);
 
-        $rowAndColVars = $this->getRowAndColVariables($variables);
-        $colVar = $rowAndColVars['col'];
-        $rowVar = $rowAndColVars['row'];
+        list($rowVar, $colVar) = $this->getRowAndColVariables($variables);
 
         $cols = count($colVar->categories);
 
@@ -70,9 +67,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
         $variablesByDepth = [];
 
         foreach ($tree as $node) {
-            if (!is_array($node)) {
-                continue;
-            }
+            $payload = $node->payload;
 
             $depth = $tree->getDepth();
 
@@ -82,20 +77,18 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
                 $currentVariable = $variablesByDepth[$depth];
             }
 
-            if (isset($node['variableName'])) {
-                $currentVariable = CrosstabExtractionUtilities::extractString('variableName', $node);
-                $variablesByDepth[$depth] = CrosstabExtractionUtilities::extractString('variableName', $node);
+            if ($payload instanceof CrosstabVariable) {
+                $currentVariable = $payload->name;
+                $variablesByDepth[$depth] = $payload->name;
                 continue;
             }
 
-            if (isset($node['categoryName'])) {
-                $category = CrosstabExtractionUtilities::extractString('categoryName', $node);
-                $isTotal = (bool)($node['isTotal'] ?? false);
-                $query[$currentVariable] = $isTotal ? null : $category;
+            if ($payload instanceof CrosstabTreeCategoryPayload) {
+                $query[$currentVariable] = $payload->isTotal ? null : $payload->category->name;
                 continue;
             }
 
-            if (!isset($node[CrosstabDataItem::FREQUENCY])) {
+            if (!($payload instanceof CrosstabDataItem)) {
                 continue;
             }
 
@@ -132,43 +125,20 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
                 $scale
             );
 
-            $percentDivisors = $this->getPercentDivisors($percentType, $totals, $rowVar, $colVar, $query);
+            $of = $this->getPercentDivisors($percentType, $totals, $rowVar, $colVar, $query);
 
-            /** @var RecursiveArrayIterator<array-key, mixed> $subIterator */
-            $subIterator = $tree->getSubIterator();
+            $payload->expectedFrequency = $expectedN;
+            $payload->expectedPercent = CrosstabMathUtilities::divide($expectedN, $of['unweighted'], $scale);
+            $payload->frequency = $n;
+            $payload->isTotal = count(array_filter($query, is_null(...))) > 0;
+            $payload->params = $key;
+            $payload->percent = CrosstabMathUtilities::divide($n, $of['unweighted'], $scale);
+            $payload->weightedExpectedFrequency = $expectedWeightedN;
+            $payload->weightedExpectedPercent = CrosstabMathUtilities::divide($expectedWeightedN, $of['weighted'], $scale);
+            $payload->weightedFrequency = $weightedN;
+            $payload->weightedPercent = CrosstabMathUtilities::divide($weightedN, $of['weighted'], $scale);
 
-            $item = CrosstabDataItem::__set_state([
-                CrosstabDataItem::EXPECTED_FREQUENCY => $expectedN,
-                CrosstabDataItem::EXPECTED_PERCENT => CrosstabMathUtilities::divide(
-                    $expectedN,
-                    $percentDivisors['unweighted'],
-                    $scale
-                ),
-                CrosstabDataItem::FREQUENCY => $n,
-                CrosstabDataItem::IS_TOTAL => count(array_filter($query, is_null(...))) > 0,
-                CrosstabDataItem::PARAMS => $key,
-                CrosstabDataItem::PERCENT => CrosstabMathUtilities::divide(
-                    $n,
-                    $percentDivisors['unweighted'],
-                    $scale
-                ),
-                CrosstabDataItem::WEIGHTED_EXPECTED_FREQUENCY => $expectedWeightedN,
-                CrosstabDataItem::WEIGHTED_EXPECTED_PERCENT => CrosstabMathUtilities::divide(
-                    $expectedWeightedN,
-                    $percentDivisors['weighted'],
-                    $scale
-                ),
-                CrosstabDataItem::WEIGHTED_FREQUENCY => $weightedN,
-                CrosstabDataItem::WEIGHTED_PERCENT => CrosstabMathUtilities::divide(
-                    $weightedN,
-                    $percentDivisors['weighted'],
-                    $scale
-                ),
-            ]);
-
-            $subIterator->offsetSet('children', $item->toArray());
-
-            if ($item->isTotal) {
+            if ($payload->isTotal) {
                 continue;
             }
 
@@ -180,7 +150,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
                 $matrix[$y] = [];
             }
 
-            $matrix[$y][] = $item;
+            $matrix[$y][] = $payload;
 
             $counter++;
         }
@@ -193,7 +163,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 
     /**
      * @param CrosstabVariableCollection $variables
-     * @return array{row: CrosstabVariable, col: CrosstabVariable}
+     * @return array{0: CrosstabVariable, 1: CrosstabVariable}
      */
     private function getRowAndColVariables(CrosstabVariableCollection $variables): array
     {
@@ -210,7 +180,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $rowVar = array_pop($vars);
         }
 
-        return ['row' => $rowVar, 'col' => $colVar];
+        return [$rowVar, $colVar];
     }
 
     /**

@@ -22,18 +22,17 @@ use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
+use CliffordVickrey\Crosstabs\Tree\CrosstabTreeCategoryPayload;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabCastingUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 
 use function array_filter;
 use function array_intersect_key;
-use function array_key_exists;
 use function array_key_last;
 use function array_keys;
 use function count;
 use function in_array;
-use function is_array;
 use function is_int;
 use function max;
 
@@ -242,44 +241,37 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         $isLastCategory = false;
         $rowIndex = count($rows) - 1;
 
-        /** @psalm-suppress MixedAssignment */
         foreach ($tree as $node) {
-            if (!is_array($node)) {
-                continue;
-            }
+            $payload = $node->payload;
 
-            if (isset($node['categoryDescription'])) {
-                $categoryName = CrosstabExtractionUtilities::extractString('categoryName', $node);
-
-                $categoryDescription = CrosstabExtractionUtilities::extractString('categoryDescription', $node);
-
+            if ($payload instanceof CrosstabTreeCategoryPayload) {
                 $attr = ['class' => CrosstabCell::APPEARANCE_Y_AXIS_CATEGORY_LABEL_SIMPLE];
 
-                $isTotal = (bool)($node['isTotal'] ?? false);
-
-                if ($isTotal) {
+                if ($payload->isTotal) {
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_TOTAL_LABEL;
                 }
 
-                $isLastCategory = $categoryName === $lastCategory;
+                $isLastCategory = $payload->category->name === $lastCategory;
 
                 if ($isLastCategory) {
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_BOTTOM_CELL;
                 }
 
                 $rowIndex++;
-                $rows[] = [CrosstabCell::header($categoryDescription, attributes: $attr)];
+                $rows[] = [CrosstabCell::header($payload->category->description, attributes: $attr)];
                 continue;
             }
 
-            if (!array_key_exists(CrosstabDataItem::FREQUENCY, $node)) {
+            if (!($payload instanceof CrosstabDataItem)) {
                 continue;
             }
+
+            $nodeArr = $payload->toArray();
 
             foreach ($dataHeaderKeys as $dataType) {
                 $percent = self::isDataTypePercent($dataType);
 
-                $value = CrosstabExtractionUtilities::extractNumeric($dataType, $node);
+                $value = CrosstabExtractionUtilities::extractNumeric($dataType, $nodeArr);
 
                 $attr = ['class' => CrosstabCell::APPEARANCE_CELL];
 
@@ -287,7 +279,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_BOTTOM_CELL;
                 }
 
-                if ($node[CrosstabDataItem::IS_TOTAL] ?? false) {
+                if ($payload->isTotal) {
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_TOTAL;
                 }
 
@@ -358,7 +350,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         $colCategoryCount = count($lastVariable->categories) + 1;
         $colCounter = 0; // used to keep track of the row to which we're writing data cells
         $currentVariableDepth = 0;
-        $currentVariableNode = [];
+        $currentVariableNode = new CrosstabVariable(' ');
         $dataHeaders = $this->getDataHeaders();
         $dataHeaderKeys = array_keys($dataHeaders);
         /** @var positive-int $dataHeaderCount */
@@ -374,7 +366,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             $firstVariable,
             $lastVariable,
             count($lastVariable->categories) + 1,
-            (count($tree) * 2) + 2
+            max(count($tree) - 1, 1) * 2
         );
 
         $topRowIndex = count($rows);
@@ -404,13 +396,10 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             $depthToRowIndexMap[$depth] += $cell->rowspan;
         };
 
-        /** @psalm-suppress MixedAssignment */
         foreach ($tree as $node) {
             $depth = $tree->getDepth();
 
-            if (!is_array($node)) {
-                continue;
-            }
+            $payload = $node->payload;
 
             if (!isset($variableNodeByDepth[$depth])) {
                 $variableNodeByDepth[$depth] = $currentVariableNode;
@@ -424,10 +413,10 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                 $currentVariableDepth = $variableDepthByDepth[$depth];
             }
 
-            if (isset($node['variableName'])) {
+            if ($payload instanceof CrosstabVariable) {
                 // variable node detected. Save this to memory so as we don't lose our place as we move up and down the
                 // tree
-                $currentVariableNode = $node;
+                $currentVariableNode = $payload;
                 $currentVariableDepth = $depth;
                 $variableDepthByDepth[$depth] = $currentVariableDepth;
                 $variableNodeByDepth[$depth] = $currentVariableNode;
@@ -435,8 +424,8 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                 continue;
             }
 
-            if (isset($node['categoryName'])) {
-                $variableName = CrosstabExtractionUtilities::extractString('variableName', $currentVariableNode);
+            if ($payload instanceof CrosstabTreeCategoryPayload) {
+                $variableName = $currentVariableNode->name;
 
                 $isFirst = $variableName === $firstVariable->name;
                 $isLast = $variableName === $lastVariable->name;
@@ -461,26 +450,13 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                     continue;
                 }
 
-                $categoryDescendantCount = CrosstabExtractionUtilities::extractAbsoluteInt(
-                    'descendantCount',
-                    $node
-                ) ?: 1;
-
                 if (!$variableFlushed && !$isFirst) {
-                    // write the variable name to Y axis (for layered crosstabs)
-                    $categorySiblingCount = CrosstabExtractionUtilities::extractAbsoluteInt(
-                        'siblingCount',
-                        $node
-                    ) ?: 1;
-
-                    $variableDescription = CrosstabExtractionUtilities::extractString(
-                        'variableDescription',
-                        $currentVariableNode
-                    );
+                    // Ronald Reagan was right about only one thing: trees are a menace! :-(
+                    $rowspan = ($node->siblingCount + 1) * max($node->yAxisDescendantCount, 1) * $dataHeaderCount;
 
                     $yAxisLabel = CrosstabCell::header(
-                        $variableDescription,
-                        rowspan: max($categorySiblingCount * $categoryDescendantCount * $dataHeaderCount, 1),
+                        $currentVariableNode->description,
+                        rowspan: $rowspan,
                         attributes: ['class' => CrosstabCell::APPEARANCE_Y_AXIS_VARIABLE_LABEL]
                     );
 
@@ -490,39 +466,36 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                 }
 
                 // write the current row variable category to the Y axis
-                $categoryDescription = CrosstabExtractionUtilities::extractString(
-                    'categoryDescription',
-                    $node
-                );
-
                 $attr = ['class' => CrosstabCell::APPEARANCE_Y_AXIS_CATEGORY_LABEL];
 
-                if ($node['isTotal'] ?? false) {
+                if ($payload->isTotal) {
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_TOTAL_LABEL;
                 }
 
                 $yAxisCategoryLabel = CrosstabCell::header(
-                    $categoryDescription,
-                    rowspan: $categoryDescendantCount * $dataHeaderCount,
-                    attributes: $attr
+                    $payload->category->description,
+                    rowspan: max($node->yAxisDescendantCount, 1) * $dataHeaderCount,
+                    attributes: $attr,
                 );
                 $write($yAxisCategoryLabel, $depth);
                 continue;
             }
 
-            if (!array_key_exists(CrosstabDataItem::FREQUENCY, $node)) {
+            if (!($payload instanceof CrosstabDataItem)) {
                 continue;
             }
+
+            $nodeArr = $payload->toArray();
 
             // write the data cells
             foreach ($dataHeaderKeys as $dataType) {
                 $percent = self::isDataTypePercent($dataType);
 
-                $value = CrosstabExtractionUtilities::extractNumeric($dataType, $node);
+                $value = CrosstabExtractionUtilities::extractNumeric($dataType, $nodeArr);
 
                 $attr = ['class' => CrosstabCell::APPEARANCE_CELL];
 
-                if ($node[CrosstabDataItem::IS_TOTAL] ?? false) {
+                if ($payload->isTotal) {
                     $attr['class'] .= ' ' . CrosstabCell::APPEARANCE_TOTAL;
                 }
 

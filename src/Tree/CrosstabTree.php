@@ -6,28 +6,26 @@ namespace CliffordVickrey\Crosstabs\Tree;
 
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Options\CrosstabCategory;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use Countable;
-use Iterator;
 use OuterIterator;
-use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
-use function array_key_last;
 use function array_shift;
+use function count;
 use function is_int;
-use function is_string;
 use function max;
 
 /**
- * @implements OuterIterator<array-key, mixed>
+ * @implements OuterIterator<int, CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode>
  */
 final class CrosstabTree implements Countable, OuterIterator
 {
     private const TOTAL = '__TOTAL__';
 
-    /** @var RecursiveIteratorIterator<RecursiveArrayIterator<array-key, mixed>> */
+    /** @var RecursiveIteratorIterator<CrosstabTreeIterator> */
     private RecursiveIteratorIterator $subject;
     /** @var int<0, max> */
     private int $count = 0;
@@ -40,9 +38,9 @@ final class CrosstabTree implements Countable, OuterIterator
      */
     public function __construct(CrosstabVariableCollection $collection, string $messageTotal = 'Total')
     {
-        $treeData = $this->getTreeData($collection->toArray(), $messageTotal, true);
-        $arrayIterator = new RecursiveArrayIterator($treeData);
-        $this->subject = new RecursiveIteratorIterator($arrayIterator, RecursiveIteratorIterator::SELF_FIRST);
+        $nodes = $this->collectTreeNodes($collection->toArray(), $messageTotal, true);
+        $it = new CrosstabTreeIterator([$nodes]);
+        $this->subject = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::SELF_FIRST);
     }
 
     /**
@@ -50,19 +48,26 @@ final class CrosstabTree implements Countable, OuterIterator
      * @param list<CrosstabVariable> $variables
      * @param non-empty-string $messageTotal
      * @param bool $top
-     * @return array<array-key, mixed>
+     * @param int|null $variableCount
+     * @return CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode
      */
-    public function getTreeData(
+    public function collectTreeNodes(
         array $variables,
         string $messageTotal,
-        bool $top = false
-    ): array {
+        bool $top = false,
+        ?int $variableCount = null
+    ): CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode {
+        if (null === $variableCount) {
+            $variableCount = count($variables);
+            $this->count = $variableCount;
+        }
+
         $children = $variables;
 
         $first = 0 === count($children) ? null : array_shift($children);
 
         if (null === $first) {
-            return CrosstabDataItem::__set_state([CrosstabDataItem::FREQUENCY => 0])->toArray();
+            return new CrosstabTreeDataItemNode(CrosstabDataItem::__set_state([]));
         }
 
         if ($top) {
@@ -71,49 +76,31 @@ final class CrosstabTree implements Countable, OuterIterator
 
         $this->lastVariableInTree = $first;
 
-        // variable node
-        $arr = [
-            'categories' => [],
-            'descendantCount' => max(count($children) - 1, 0),
-            'variableDescription' => $first->description,
-            'variableName' => $first->name
-        ];
+        // variable parent node
+        $variableNode = new CrosstabTreeVariableNode($first, max($variableCount - 1, 0), count($children));
 
-        if ($top) {
-            $this->count = $arr['descendantCount'];
-        }
-
-        $childTree = $this->getTreeData($children, $messageTotal);
+        $childNode = $this->collectTreeNodes($children, $messageTotal, variableCount: $variableCount);
         $childCategoryCount = self::getChildCategoryCount($children);
-        $siblingCategoryCount = count($first->categories) + 1;
+        $siblingCategoryCount = count($first->categories);
 
         foreach ($first->categories as $category) {
             // category node
-            $arr['categories'][] = [
-                'categoryDescription' => $category->description,
-                'categoryName' => $category->name,
-                'children' => $childTree,
-                'descendantCount' => $childCategoryCount,
-                'isTotal' => false,
-                'siblingCount' => $siblingCategoryCount
-            ];
+            $variableNode->children[] = new CrosstabTreeCategoryNode(
+                new CrosstabTreeCategoryPayload($category),
+                $siblingCategoryCount,
+                $childCategoryCount,
+                [clone $childNode]
+            );
         }
 
-        // total node
-        $arr['categories'][] = [
-            'categoryDescription' => $messageTotal,
-            'categoryName' => self::TOTAL,
-            'children' => $childTree,
-            'descendantCount' => $childCategoryCount,
-            'isTotal' => true,
-            'siblingCount' => $siblingCategoryCount
-        ];
+        $variableNode->children[] = new CrosstabTreeCategoryNode(
+            new CrosstabTreeCategoryPayload(new CrosstabCategory(self::TOTAL, $messageTotal), true),
+            $siblingCategoryCount,
+            $childCategoryCount,
+            [clone $childNode]
+        );
 
-        if (!$top) {
-            return $arr;
-        }
-
-        return [$arr];
+        return $variableNode;
     }
 
     /**
@@ -146,11 +133,22 @@ final class CrosstabTree implements Countable, OuterIterator
     }
 
     /**
-     * @return mixed
+     * @return CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode
      */
-    public function current(): mixed
+    public function current(): CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode
     {
-        return $this->subject->current();
+        /** @psalm-suppress MixedAssignment */
+        $current = $this->subject->current();
+
+        if (
+            ($current instanceof CrosstabTreeVariableNode)
+            || ($current instanceof CrosstabTreeCategoryNode)
+            || ($current instanceof CrosstabTreeDataItemNode)
+        ) {
+            return $current;
+        }
+
+        throw new CrosstabOutOfBoundException('Iterator is not valid');
     }
 
     /**
@@ -162,14 +160,14 @@ final class CrosstabTree implements Countable, OuterIterator
     }
 
     /**
-     * @return int|string|null
+     * @return int|null
      */
-    public function key(): int|string|null
+    public function key(): ?int
     {
         /** @psalm-suppress MixedAssignment */
         $key = $this->subject->key();
 
-        if (is_int($key) || is_string($key)) {
+        if (is_int($key)) {
             return $key;
         }
 
@@ -193,11 +191,13 @@ final class CrosstabTree implements Countable, OuterIterator
     }
 
     /**
-     * @return Iterator<array-key, mixed>
+     * @return CrosstabTreeIterator
      */
-    public function getInnerIterator(): Iterator
+    public function getInnerIterator(): CrosstabTreeIterator
     {
-        return $this->subject->getInnerIterator();
+        /** @var CrosstabTreeIterator $it */
+        $it = $this->subject->getInnerIterator();
+        return $it;
     }
 
     /**
@@ -206,22 +206,6 @@ final class CrosstabTree implements Countable, OuterIterator
     public function getDepth(): int
     {
         return $this->subject->getDepth();
-    }
-
-    /**
-     * @param int|null $level
-     * @return RecursiveArrayIterator<array-key, mixed>|null
-     */
-    public function getSubIterator(?int $level = null): ?RecursiveArrayIterator
-    {
-        $arr = $this->subject->getSubIterator($level);
-
-        if ($arr instanceof RecursiveArrayIterator) {
-            /** @var RecursiveArrayIterator<array-key, mixed> */
-            return $arr;
-        }
-
-        return null;
     }
 
     /**
