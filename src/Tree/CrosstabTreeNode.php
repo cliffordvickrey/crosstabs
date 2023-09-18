@@ -10,6 +10,7 @@ use function count;
 
 /**
  * @template-covariant TPayload of object
+ * @internal
  */
 abstract class CrosstabTreeNode implements Countable
 {

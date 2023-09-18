@@ -8,6 +8,7 @@ use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 
 /**
  * @extends CrosstabTreeNode<CrosstabVariable>
+ * @internal
  */
 final class CrosstabTreeVariableNode extends CrosstabTreeNode
 {

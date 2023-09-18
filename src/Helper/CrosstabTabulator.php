@@ -12,13 +12,22 @@ use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 
 use function array_flip;
 use function array_intersect_key;
-use function http_build_query;
 
 /**
  * @internal
  */
 final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
 {
+    private CrosstabParamsSerializerInterface $serializer;
+
+    /**
+     * @param CrosstabParamsSerializerInterface|null $serializer
+     */
+    public function __construct(?CrosstabParamsSerializerInterface $serializer = null)
+    {
+        $this->serializer = $serializer ?? new CrosstabParamsSerializer();
+    }
+
     /**
      * @inheritDoc
      */
@@ -53,7 +62,7 @@ final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
             foreach ($powerSet as $elementsInPowerSet) {
                 $query = array_intersect_key($fullQuery, array_flip($elementsInPowerSet));
 
-                $key = http_build_query($query);
+                $key = $this->serializer->serializeParams($query);
 
                 if (!isset($totals['n'][$key])) {
                     $totals['n'][$key] = (float)$sourceRow->n;

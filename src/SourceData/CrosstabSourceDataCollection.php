@@ -19,7 +19,6 @@ use function is_iterable;
 use function is_object;
 use function iterator_to_array;
 use function sprintf;
-use function strval;
 
 /**
  * @implements IteratorAggregate<int, CrosstabSourceDataRow>
@@ -67,7 +66,7 @@ final readonly class CrosstabSourceDataCollection implements Countable, Iterator
             return clone $rawRow;
         }
 
-        if (is_object($rawRow)) {
+        if (is_object($rawRow) && !is_iterable($rawRow)) {
             $rawRow = (array)$rawRow;
         }
 

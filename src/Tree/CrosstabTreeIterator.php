@@ -11,6 +11,7 @@ use function count;
 
 /**
  * @implements RecursiveIterator<int, CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode>
+ * @internal
  */
 class CrosstabTreeIterator implements RecursiveIterator
 {

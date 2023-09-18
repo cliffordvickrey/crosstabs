@@ -18,21 +18,22 @@ use function array_diff_key;
 use function array_filter;
 use function array_intersect_key;
 use function array_pop;
-use function http_build_query;
 
 /**
  * @internal
  */
 final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 {
+    private CrosstabParamsSerializerInterface $serializer;
     /** @var WeakMap<CrosstabTree, list<list<CrosstabDataItem>>> */
     private WeakMap $treeToMatrixMap;
 
     /**
-     *
+     * @param CrosstabParamsSerializerInterface|null $serializer
      */
-    public function __construct()
+    public function __construct(?CrosstabParamsSerializerInterface $serializer = null)
     {
+        $this->serializer = $serializer ?? new CrosstabParamsSerializer();
         /** @psalm-suppress PropertyTypeCoercion */
         $this->treeToMatrixMap = new WeakMap();
     }
@@ -92,16 +93,16 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
                 continue;
             }
 
-            $key = http_build_query($query);
+            $key = $this->serializer->serializeParams($query);
             $n = $totals['n'][$key] ?? 0.0;
 
             $weightedN = $totals['weightedN'][$key] ?? 0.0;
 
-            $rowSubTotalKey = http_build_query(array_diff_key($query, [$colVar->name => true]));
+            $rowSubTotalKey = $this->serializer->serializeParams(array_diff_key($query, [$colVar->name => true]));
             $rowSubTotalN = $totals['n'][$rowSubTotalKey] ?? 0.0;
             $rowSubTotalWeightedN = $totals['weightedN'][$rowSubTotalKey] ?? 0.0;
 
-            $colSubTotalKey = http_build_query(array_intersect_key($query, [$colVar->name => true]));
+            $colSubTotalKey = $this->serializer->serializeParams(array_intersect_key($query, [$colVar->name => true]));
             $colSubTotalN = $totals['n'][$colSubTotalKey] ?? 0.0;
             $colSubTotalWeightedN = $totals['weightedN'][$colSubTotalKey] ?? 0.0;
 
@@ -131,7 +132,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $payload->expectedPercent = CrosstabMathUtilities::divide($expectedN, $of['unweighted'], $scale);
             $payload->frequency = $n;
             $payload->isTotal = count(array_filter($query, is_null(...))) > 0;
-            $payload->params = $key;
+            $payload->params = $query;
             $payload->percent = CrosstabMathUtilities::divide($n, $of['unweighted'], $scale);
             $payload->weightedExpectedFrequency = $expectedWeightedN;
             $payload->weightedExpectedPercent = CrosstabMathUtilities::divide($expectedWeightedN, $of['weighted'], $scale);
@@ -199,12 +200,16 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
         array $query
     ): array {
         $key = match ($percentType) {
-            CrosstabPercentType::COLUMN => http_build_query(array_intersect_key($query, [$colVar->name => true])),
-            CrosstabPercentType::COLUMN_WITHIN_LAYER => http_build_query(array_diff_key($query, [
+            CrosstabPercentType::COLUMN => $this->serializer->serializeParams(array_intersect_key($query, [
+                $colVar->name => true
+            ])),
+            CrosstabPercentType::COLUMN_WITHIN_LAYER => $this->serializer->serializeParams(array_diff_key($query, [
                 $rowVar->name => true
             ])),
-            CrosstabPercentType::ROW => http_build_query(array_diff_key($query, [$colVar->name => true])),
-            CrosstabPercentType::TOTAL_WITHIN_LAYER => http_build_query(array_diff_key($query, [
+            CrosstabPercentType::ROW => $this->serializer->serializeParams(array_diff_key($query, [
+                $colVar->name => true
+            ])),
+            CrosstabPercentType::TOTAL_WITHIN_LAYER => $this->serializer->serializeParams(array_diff_key($query, [
                 $rowVar->name => true,
                 $colVar->name => true
             ])),

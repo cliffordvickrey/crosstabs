@@ -20,6 +20,7 @@ use function max;
 
 /**
  * @implements OuterIterator<int, CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode>
+ * @internal
  */
 final class CrosstabTree implements Countable, OuterIterator
 {

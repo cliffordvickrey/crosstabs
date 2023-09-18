@@ -7,6 +7,9 @@ namespace CliffordVickrey\Crosstabs\Crosstab;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use JsonSerializable;
 
+use function array_key_exists;
+use function is_array;
+
 /**
  * Encapsulate the data for a cell in a contingency table matrix
  */
@@ -28,7 +31,7 @@ class CrosstabDataItem implements JsonSerializable
      * @param float|null $expectedPercent
      * @param int|float|null $frequency
      * @param bool $isTotal
-     * @param string $params
+     * @param array<string, string|null> $params
      * @param float|null $percent
      * @param int|float|null $weightedExpectedFrequency
      * @param float|null $weightedExpectedPercent
@@ -40,7 +43,7 @@ class CrosstabDataItem implements JsonSerializable
         public float|null $expectedPercent,
         public int|float|null $frequency,
         public bool $isTotal,
-        public string $params,
+        public array $params,
         public float|null $percent,
         public int|float|null $weightedExpectedFrequency,
         public float|null $weightedExpectedPercent,
@@ -55,12 +58,17 @@ class CrosstabDataItem implements JsonSerializable
      */
     public static function __set_state(array $an_array): self
     {
+        /** @var array<string, string|null> $params */
+        $params = (array_key_exists(self::PARAMS, $an_array) && is_array($an_array[self::PARAMS]))
+            ? $an_array[self::PARAMS]
+            : [];
+
         return new self(
             CrosstabExtractionUtilities::extractNumeric(self::EXPECTED_FREQUENCY, $an_array),
             CrosstabExtractionUtilities::extractFloat(self::EXPECTED_PERCENT, $an_array),
             CrosstabExtractionUtilities::extractNumeric(self::FREQUENCY, $an_array),
             (bool)($an_array[self::IS_TOTAL] ?? null),
-            CrosstabExtractionUtilities::extractString(self::PARAMS, $an_array),
+            $params,
             CrosstabExtractionUtilities::extractFloat(self::PERCENT, $an_array),
             CrosstabExtractionUtilities::extractNumeric(self::WEIGHTED_EXPECTED_FREQUENCY, $an_array),
             CrosstabExtractionUtilities::extractFloat(self::WEIGHTED_EXPECTED_PERCENT, $an_array),
@@ -75,7 +83,7 @@ class CrosstabDataItem implements JsonSerializable
      *     expectedPercent: float|null,
      *     frequency: float|int|null,
      *     isTotal: bool,
-     *     params: string,
+     *     params: array<string, string|null>,
      *     percent: float|null,
      *     weightedExpectedFrequency: float|int|null,
      *     weightedExpectedPercent: float|null,
@@ -94,7 +102,7 @@ class CrosstabDataItem implements JsonSerializable
      *     expectedPercent: float|null,
      *     frequency: float|int|null,
      *     isTotal: bool,
-     *     params: string,
+     *     params: array<string, string|null>,
      *     percent: float|null,
      *     weightedExpectedFrequency: float|int|null,
      *     weightedExpectedPercent: float|null,
@@ -124,7 +132,7 @@ class CrosstabDataItem implements JsonSerializable
      *     expectedPercent: float|null,
      *     frequency: float|int|null,
      *     isTotal: bool,
-     *     params: string,
+     *     params: array<string, string|null>,
      *     percent: float|null,
      *     weightedExpectedFrequency: float|int|null,
      *     weightedExpectedPercent: float|null,
@@ -143,11 +151,16 @@ class CrosstabDataItem implements JsonSerializable
      */
     public function __unserialize(array $data): void
     {
+        /** @var array<string, string|null> $params */
+        $params = (array_key_exists(self::PARAMS, $data) && is_array($data[self::PARAMS]))
+            ? $data[self::PARAMS]
+            : [];
+
         $this->expectedFrequency = CrosstabExtractionUtilities::extractNumeric(self::EXPECTED_FREQUENCY, $data);
         $this->expectedPercent = CrosstabExtractionUtilities::extractFloat(self::EXPECTED_PERCENT, $data);
         $this->isTotal = (bool)($data[self::IS_TOTAL] ?? null);
         $this->frequency = CrosstabExtractionUtilities::extractNumeric(self::FREQUENCY, $data);
-        $this->params = CrosstabExtractionUtilities::extractString(self::PARAMS, $data);
+        $this->params = $params;
         $this->percent = CrosstabExtractionUtilities::extractFloat(self::PERCENT, $data);
         $this->weightedFrequency = CrosstabExtractionUtilities::extractNumeric(self::WEIGHTED_FREQUENCY, $data);
         $this->weightedPercent = CrosstabExtractionUtilities::extractFloat(self::WEIGHTED_PERCENT, $data);
