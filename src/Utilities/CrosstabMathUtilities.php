@@ -86,12 +86,13 @@ class CrosstabMathUtilities
      */
     public static function divide(mixed $dividend, mixed $divisor, int $scale = self::DEFAULT_SCALE): ?float
     {
-        $dividend = (string)(CrosstabCastingUtilities::toNumeric($dividend) ?? 0.0);
         $divisor = (string)(CrosstabCastingUtilities::toNumeric($divisor) ?? 0.0);
 
         if (0 === bccomp('0', $divisor, $scale)) {
             return null;
         }
+
+        $dividend = (string)(CrosstabCastingUtilities::toNumeric($dividend) ?? 0.0);
 
         return (float)bcdiv($dividend, $divisor, $scale);
     }

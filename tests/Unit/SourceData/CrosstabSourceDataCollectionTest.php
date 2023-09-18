@@ -15,6 +15,9 @@ use stdClass;
 #[CoversClass(CrosstabSourceDataCollection::class)]
 class CrosstabSourceDataCollectionTest extends TestCase
 {
+    /**
+     * @return void
+     */
     public function testFromRawData(): void
     {
         $rawData = [
@@ -68,7 +71,6 @@ class CrosstabSourceDataCollectionTest extends TestCase
         self::assertEquals(9, $row->weightedN);
 
         $it->next();
-        ;
         $row = $it->current();
         self::assertInstanceOf(CrosstabSourceDataRow::class, $row);
         self::assertEquals('biz', $row->getValue('foo'));
@@ -76,7 +78,6 @@ class CrosstabSourceDataCollectionTest extends TestCase
         self::assertEquals(20, $row->weightedN);
 
         $it->next();
-        ;
         $row = $it->current();
         self::assertInstanceOf(CrosstabSourceDataRow::class, $row);
         self::assertEquals('bar', $row->getValue('foo'));

@@ -48,14 +48,14 @@ final class CrosstabTree implements Countable, OuterIterator
      * Represents all variables and categories as a tree. At maximum depth, a placeholder for numeric values is added
      * @param list<CrosstabVariable> $variables
      * @param non-empty-string $messageTotal
-     * @param bool $top
+     * @param bool $root
      * @param int|null $variableCount
      * @return CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode
      */
     public function collectTreeNodes(
         array $variables,
         string $messageTotal,
-        bool $top = false,
+        bool $root = false,
         ?int $variableCount = null
     ): CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode {
         if (null === $variableCount) {
@@ -68,10 +68,11 @@ final class CrosstabTree implements Countable, OuterIterator
         $first = 0 === count($children) ? null : array_shift($children);
 
         if (null === $first) {
+            // data leaf
             return new CrosstabTreeDataItemNode(CrosstabDataItem::__set_state([]));
         }
 
-        if ($top) {
+        if ($root) {
             $this->firstVariableInTree = $first;
         }
 
@@ -94,6 +95,7 @@ final class CrosstabTree implements Countable, OuterIterator
             );
         }
 
+        // marginal total node
         $variableNode->children[] = new CrosstabTreeCategoryNode(
             new CrosstabTreeCategoryPayload(new CrosstabCategory(self::TOTAL, $messageTotal), true),
             $siblingCategoryCount,
