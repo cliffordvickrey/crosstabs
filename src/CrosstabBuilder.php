@@ -540,10 +540,10 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         }
 
         $rows[] = [
-            CrosstabCell::header($colVariable->description, $yAxisWidth, 2, attributes: [
+            CrosstabCell::header($rowVariable->description, $yAxisWidth, 2, attributes: [
                 'class' => CrosstabCell::APPEARANCE_Y_AXIS
             ]),
-            CrosstabCell::header($rowVariable->description, $xAxisWidth, attributes: [
+            CrosstabCell::header($colVariable->description, $xAxisWidth, attributes: [
                 'class' => CrosstabCell::APPEARANCE_X_AXIS
             ])
         ];
