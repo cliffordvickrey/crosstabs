@@ -63,6 +63,10 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
             $tableClasses[] = 'table';
         }
 
+        if (!in_array('border', $tableClasses)) {
+            $tableClasses[] = 'border';
+        }
+
         $tableAttributes['class'] = implode(' ', $tableClasses);
 
         $options = array_merge($options, [
