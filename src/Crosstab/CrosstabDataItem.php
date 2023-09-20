@@ -53,6 +53,25 @@ class CrosstabDataItem implements JsonSerializable
     }
 
     /**
+     * @return self
+     */
+    public static function createForLeafNode(): self
+    {
+        return new self(
+            expectedFrequency: null,
+            expectedPercent: null,
+            frequency: null,
+            isTotal: false,
+            params: [],
+            percent: null,
+            weightedExpectedFrequency: null,
+            weightedExpectedPercent: null,
+            weightedFrequency: null,
+            weightedPercent: null
+        );
+    }
+
+    /**
      * @param array<array-key, mixed> $an_array
      * @return self
      */

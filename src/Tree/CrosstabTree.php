@@ -69,7 +69,7 @@ final class CrosstabTree implements Countable, OuterIterator
 
         if (null === $first) {
             // data leaf
-            return new CrosstabTreeDataItemNode(CrosstabDataItem::__set_state([]));
+            return new CrosstabTreeDataItemNode(CrosstabDataItem::createForLeafNode());
         }
 
         if ($root) {

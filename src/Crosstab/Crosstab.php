@@ -14,7 +14,10 @@ use Traversable;
 
 use function array_filter;
 use function array_map;
+use function array_merge;
+use function array_pad;
 use function array_values;
+use function array_walk;
 use function count;
 use function is_array;
 use function is_object;
@@ -29,6 +32,8 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     protected array $rows;
     /** @var list<list<CrosstabDataItem>> */
     protected array $matrix;
+    /** @var array<int, array<int, ?CrosstabIndexCellIndexDto>>|null */
+    private ?array $cartesianGrid = null;
 
     /**
      * @param array<int, CrosstabRow|array<int, CrosstabCell>> $rows
@@ -80,6 +85,8 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
 
         /** @psalm-suppress PropertyTypeCoercion */
         $this->matrix = $matrix;
+
+        $this->cartesianGrid = self::parseCartesianGrid($data['cartesianGrid'] ?? null);
     }
 
     /**
@@ -120,6 +127,33 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
         }
 
         return array_values(array_map(self::parseDataItem(...), $row));
+    }
+
+    /**
+     * @param mixed $rawGrid
+     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>|null
+     */
+    private static function parseCartesianGrid(mixed $rawGrid): ?array
+    {
+        if (!is_array($rawGrid)) {
+            return null;
+        }
+
+        $grid = [];
+        $y = -1;
+
+        foreach ($rawGrid as $cellIndexes) {
+            if (!is_array($cellIndexes)) {
+                continue;
+            }
+
+            $grid[++$y] = array_values(array_filter(
+                $cellIndexes,
+                static fn($val) => ($val instanceof CrosstabIndexCellIndexDto) || null === $val
+            ));
+        }
+
+        return $grid;
     }
 
     /**
@@ -166,46 +200,95 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
      * @param int $x
      * @param int $y
      * @return CrosstabCell|null
-     * @todo something better than this
      */
     public function getCell(int $x, int $y): ?CrosstabCell
     {
+        $grid = $this->getCartesianGrid();
+
+        $dto = $grid[$y][$x] ?? null;
+
+        if (null === $dto) {
+            return null;
+        }
+
+        return $this->rows[$dto->rowIndex][$dto->cellIndex];
+    }
+
+    /**
+     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     */
+    protected function getCartesianGrid(): array
+    {
+        if (null === $this->cartesianGrid) {
+            $this->cartesianGrid = $this->buildCartesianGrid();
+        }
+
+        return $this->cartesianGrid;
+    }
+
+    /**
+     * Maps X and Y Cartesian coordinates to row and cell indexes (handling cells that span multiple rows and/or
+     * columns)
+     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     */
+    protected function buildCartesianGrid(): array
+    {
+        $currentY = 0;
+        $maxX = 0;
+        $grid = [];
         $rowspanLookAhead = [];
 
-        foreach ($this->rows as $currentY => $row) {
-            if ($currentY > $y) {
-                return null;
+        foreach ($this->rows as $i => $row) {
+            $grid[$currentY] = [];
+
+            $xCount = count($row);
+
+            if ($xCount < 1) {
+                array_walk($rowspanLookAhead, static fn(int &$count) => $count--);
+            } elseif ($xCount > $maxX) {
+                $maxX = $xCount;
             }
 
             $currentX = 0;
 
-            foreach ($row as $cell) {
+            foreach ($row as $ii => $cell) {
                 $valid = false;
 
                 while (!$valid) {
-                    $valid = ($rowspanLookAhead[$currentX] ?? 0) < 1;
+                    $lookAhead = 0;
+
+                    if (!isset($rowspanLookAhead[$currentX])) {
+                        $valid = true;
+                    } else {
+                        /** @var int $lookAhead */
+                        $lookAhead = $rowspanLookAhead[$currentX];
+                        $valid = $lookAhead < 1;
+                    }
 
                     if (!$valid) {
-                        $rowspanLookAhead[$currentX]--;
+                        $grid[$currentY][$currentX] = null;
+                        $rowspanLookAhead[$currentX] = $lookAhead - 1;
                         $currentX++;
                     }
                 }
 
                 if ($cell->rowspan > 1) {
-                    for ($i = 0; $i < $cell->colspan; $i++) {
-                        $rowspanLookAhead[$currentX + $i] = $cell->rowspan - 1;
+                    for ($iii = 0; $iii < $cell->colspan; $iii++) {
+                        $nextX = $currentX + $iii;
+                        $grid[$currentY][$nextX] = null;
+                        $rowspanLookAhead[$nextX] = $cell->rowspan - 1;
                     }
                 }
 
-                if ($currentX === $x && $currentY === $y) {
-                    return $cell;
-                }
+                $grid[$currentY][$currentX] = new CrosstabIndexCellIndexDto($i, $ii);
 
                 $currentX += $cell->colspan;
             }
+
+            $currentY++;
         }
 
-        return null;
+        return array_map(static fn(array $row) => array_pad($row, $maxX, null), $grid);
     }
 
     /**
@@ -291,11 +374,17 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     }
 
     /**
-     * @return array{rows: array<int, CrosstabRow>, matrix: list<list<CrosstabDataItem>>}
+     * @return array{
+     *     rows: array<int, CrosstabRow>,
+     *     matrix: list<list<CrosstabDataItem>>,
+     *     cartesianGrid: array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     * }
      */
     public function __serialize(): array
     {
-        return $this->toArray();
+        return array_merge($this->toArray(), [
+            'cartesianGrid' => $this->getCartesianGrid()
+        ]);
     }
 
     /**
