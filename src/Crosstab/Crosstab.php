@@ -166,19 +166,43 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
      * @param int $x
      * @param int $y
      * @return CrosstabCell|null
+     * @todo something better than this
      */
     public function getCell(int $x, int $y): ?CrosstabCell
     {
-        $row = $this->rows[$y] ?? [];
+        $rowspanLookAhead = [];
 
-        $currentX = 0;
-
-        foreach ($row as $cell) {
-            if ($x === $currentX) {
-                return $cell;
+        foreach ($this->rows as $currentY => $row) {
+            if ($currentY > $y) {
+                return null;
             }
 
-            $currentX += $cell->colspan;
+            $currentX = 0;
+
+            foreach ($row as $cell) {
+                $valid = false;
+
+                while (!$valid) {
+                    $valid = ($rowspanLookAhead[$currentX] ?? 0) < 1;
+
+                    if (!$valid) {
+                        $rowspanLookAhead[$currentX]--;
+                        $currentX++;
+                    }
+                }
+
+                if ($cell->rowspan > 1) {
+                    for ($i = 0; $i < $cell->colspan; $i++) {
+                        $rowspanLookAhead[$currentX + $i] = $cell->rowspan - 1;
+                    }
+                }
+
+                if ($currentX === $x && $currentY === $y) {
+                    return $cell;
+                }
+
+                $currentX += $cell->colspan;
+            }
         }
 
         return null;

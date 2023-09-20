@@ -102,7 +102,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         }
 
         if (0 === count($this->getDataHeaders())) {
-            throw new CrosstabInvalidArgumentException('No frequency or percent to tabulate');
+            throw new CrosstabInvalidArgumentException('No frequency or percent to display in table');
         }
     }
 
@@ -350,7 +350,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         $colCategoryCount = count($lastVariable->categories) + 1;
         $colCounter = 0; // used to keep track of the row to which we're writing data cells
         $currentVariableDepth = 0;
-        $currentVariableNode = new CrosstabVariable(' ');
+        $currentVariable = new CrosstabVariable(' ');
         $dataHeaders = $this->getDataHeaders();
         $dataHeaderKeys = array_keys($dataHeaders);
         /** @var positive-int $dataHeaderCount */
@@ -358,9 +358,9 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
         /** @var array<int, int> $depthToRowIndexMap */
         $depthToRowIndexMap = [];
         $lastDataType = array_key_last($dataHeaders);
+        $variableByDepth = [];
         $variableDepthByDepth = [];
         $variableFlushed = false;
-        $variableNodeByDepth = [];
 
         $rows = $this->buildCrosstabHeader(
             $firstVariable,
@@ -401,10 +401,10 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
             $payload = $node->payload;
 
-            if (!isset($variableNodeByDepth[$depth])) {
-                $variableNodeByDepth[$depth] = $currentVariableNode;
+            if (!isset($variableByDepth[$depth])) {
+                $variableByDepth[$depth] = $currentVariable;
             } else {
-                $currentVariableNode = $variableNodeByDepth[$depth];
+                $currentVariable = $variableByDepth[$depth];
             }
 
             if (!isset($variableDepthByDepth[$depth])) {
@@ -416,16 +416,16 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             if ($payload instanceof CrosstabVariable) {
                 // variable node detected. Save this to memory so as we don't lose our place as we move up and down the
                 // tree
-                $currentVariableNode = $payload;
+                $currentVariable = $payload;
                 $currentVariableDepth = $depth;
                 $variableDepthByDepth[$depth] = $currentVariableDepth;
-                $variableNodeByDepth[$depth] = $currentVariableNode;
+                $variableByDepth[$depth] = $currentVariable;
                 $variableFlushed = false;
                 continue;
             }
 
             if ($payload instanceof CrosstabTreeCategoryPayload) {
-                $variableName = $currentVariableNode->name;
+                $variableName = $currentVariable->name;
 
                 $isFirst = $variableName === $firstVariable->name;
                 $isLast = $variableName === $lastVariable->name;
@@ -455,7 +455,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
                     $rowspan = ($node->siblingCount + 1) * max($node->yAxisDescendantCount, 1) * $dataHeaderCount;
 
                     $yAxisLabel = CrosstabCell::header(
-                        $currentVariableNode->description,
+                        $currentVariable->description,
                         rowspan: $rowspan,
                         attributes: ['class' => CrosstabCell::APPEARANCE_Y_AXIS_VARIABLE_LABEL]
                     );
@@ -482,7 +482,9 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
             }
 
             if (!($payload instanceof CrosstabDataItem)) {
+                // @codeCoverageIgnoreStart
                 continue;
+                // @codeCoverageIgnoreEnd
             }
 
             $nodeArr = $payload->toArray();
