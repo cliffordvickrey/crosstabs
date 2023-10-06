@@ -39,8 +39,6 @@
   "scripts": {
     "analyse": "vendor/bin/phpstan analyse",
     "baseline": "vendor/bin/phpstan analyse --generate-baseline",
-    "delete-answers": "@php bin/delete-answers",
-    "fake-answers": "@php bin/fake-answers",
     "migrate": "phpunit --migrate-configuration",
     "phpcs": "vendor/bin/phpcs",
     "phpcbf": "vendor/bin/phpcbf",

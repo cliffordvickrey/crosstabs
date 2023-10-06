@@ -14,6 +14,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function call_user_func;
+use function file_put_contents;
+use function serialize;
 use function sprintf;
 
 #[CoversClass(CrosstabBuilder::class)]

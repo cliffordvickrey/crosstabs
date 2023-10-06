@@ -7,4 +7,5 @@ dev
 phpstan.neon
 phpunit.xml
 psalm.xml
+tests/resources/crosstab.txt
 vendor

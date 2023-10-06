@@ -9,8 +9,6 @@ use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
-use RecursiveArrayIterator;
-use RecursiveIteratorIterator;
 
 /**
  * @internal

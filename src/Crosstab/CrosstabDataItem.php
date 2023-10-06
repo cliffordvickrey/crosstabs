@@ -181,6 +181,14 @@ class CrosstabDataItem implements JsonSerializable
         $this->frequency = CrosstabExtractionUtilities::extractNumeric(self::FREQUENCY, $data);
         $this->params = $params;
         $this->percent = CrosstabExtractionUtilities::extractFloat(self::PERCENT, $data);
+        $this->weightedExpectedFrequency = CrosstabExtractionUtilities::extractNumeric(
+            self::WEIGHTED_EXPECTED_FREQUENCY,
+            $data
+        );
+        $this->weightedExpectedPercent = CrosstabExtractionUtilities::extractFloat(
+            self::WEIGHTED_EXPECTED_PERCENT,
+            $data
+        );
         $this->weightedFrequency = CrosstabExtractionUtilities::extractNumeric(self::WEIGHTED_FREQUENCY, $data);
         $this->weightedPercent = CrosstabExtractionUtilities::extractFloat(self::WEIGHTED_PERCENT, $data);
     }

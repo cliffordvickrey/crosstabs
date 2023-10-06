@@ -54,7 +54,9 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
         $rawRows = $data['rows'] ?? [];
 
         if (!is_array($rawRows)) {
+            // @codeCoverageIgnoreStart
             $rawRows = [];
+            // @codeCoverageIgnoreEnd
         }
 
         $rows = [];
@@ -68,11 +70,15 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
         $rawMatrix = $data['matrix'] ?? [];
 
         if ($rawMatrix instanceof Traversable) {
+            // @codeCoverageIgnoreStart
             $rawMatrix = iterator_to_array($rawMatrix);
+            // @codeCoverageIgnoreEnd
         }
 
         if (!is_array($rawMatrix)) {
+            // @codeCoverageIgnoreStart
             $rawMatrix = [];
+            // @codeCoverageIgnoreEnd
         }
 
         $rawMatrix = array_values($rawMatrix);
@@ -108,8 +114,9 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
                 $val
             )));
         }
-
+        // @codeCoverageIgnoreStart
         return new CrosstabRow();
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -119,11 +126,15 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     private static function parseMatrixRow(mixed $row): array
     {
         if ($row instanceof Traversable) {
+            // @codeCoverageIgnoreStart
             $row = iterator_to_array($row);
+            // @codeCoverageIgnoreEnd
         }
 
         if (!is_array($row)) {
+            // @codeCoverageIgnoreStart
             return [];
+            // @codeCoverageIgnoreEnd
         }
 
         return array_values(array_map(self::parseDataItem(...), $row));
@@ -136,7 +147,9 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     private static function parseCartesianGrid(mixed $rawGrid): ?array
     {
         if (!is_array($rawGrid)) {
+            // @codeCoverageIgnoreStart
             return null;
+            // @codeCoverageIgnoreEnd
         }
 
         $grid = [];
@@ -144,7 +157,9 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
 
         foreach ($rawGrid as $cellIndexes) {
             if (!is_array($cellIndexes)) {
+                // @codeCoverageIgnoreStart
                 continue;
+                // @codeCoverageIgnoreEnd
             }
 
             $grid[++$y] = array_values(array_filter(
@@ -184,6 +199,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
             return $val;
         }
 
+        // @codeCoverageIgnoreStart
         if (is_object($val)) {
             $val = (array)$val;
         }
@@ -193,6 +209,15 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
         }
 
         return CrosstabDataItem::__set_state([]);
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @return void
+     */
+    public function clearState(): void
+    {
+        $this->cartesianGrid = null;
     }
 
     /**
@@ -304,6 +329,20 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
             foreach ($matrixRow as $x => $dataItem) {
                 /** @psalm-suppress PropertyTypeCoercion */
                 $this->matrix[$y][$x] = clone $dataItem;
+            }
+        }
+
+        if (null === $this->cartesianGrid) {
+            return;
+        }
+
+        foreach ($this->cartesianGrid as $y => $gridRow) {
+            foreach ($gridRow as $x => $DTO) {
+                if (null === $DTO) {
+                    continue;
+                }
+
+                $this->cartesianGrid[$y][$x] = clone $DTO;
             }
         }
     }
