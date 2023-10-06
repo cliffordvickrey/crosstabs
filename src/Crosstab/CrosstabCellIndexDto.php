@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Crosstab;
 
-final readonly class CrosstabIndexCellIndexDto
+final readonly class CrosstabCellIndexDto
 {
     /**
      * @param int $rowIndex

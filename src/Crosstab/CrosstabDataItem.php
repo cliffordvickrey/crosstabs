@@ -171,9 +171,7 @@ class CrosstabDataItem implements JsonSerializable
     public function __unserialize(array $data): void
     {
         /** @var array<string, string|null> $params */
-        $params = (array_key_exists(self::PARAMS, $data) && is_array($data[self::PARAMS]))
-            ? $data[self::PARAMS]
-            : [];
+        $params = (array_key_exists(self::PARAMS, $data) && is_array($data[self::PARAMS])) ? $data[self::PARAMS] : [];
 
         $this->expectedFrequency = CrosstabExtractionUtilities::extractNumeric(self::EXPECTED_FREQUENCY, $data);
         $this->expectedPercent = CrosstabExtractionUtilities::extractFloat(self::EXPECTED_PERCENT, $data);

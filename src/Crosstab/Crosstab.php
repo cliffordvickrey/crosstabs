@@ -32,7 +32,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     protected array $rows;
     /** @var list<list<CrosstabDataItem>> */
     protected array $matrix;
-    /** @var array<int, array<int, ?CrosstabIndexCellIndexDto>>|null */
+    /** @var array<int, array<int, ?CrosstabCellIndexDto>>|null */
     private ?array $cartesianGrid = null;
 
     /**
@@ -142,7 +142,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
 
     /**
      * @param mixed $rawGrid
-     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>|null
+     * @return array<int, array<int, ?CrosstabCellIndexDto>>|null
      */
     private static function parseCartesianGrid(mixed $rawGrid): ?array
     {
@@ -164,7 +164,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
 
             $grid[++$y] = array_values(array_filter(
                 $cellIndexes,
-                static fn($val) => ($val instanceof CrosstabIndexCellIndexDto) || null === $val
+                static fn($val) => ($val instanceof CrosstabCellIndexDto) || null === $val
             ));
         }
 
@@ -240,7 +240,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     }
 
     /**
-     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     * @return array<int, array<int, ?CrosstabCellIndexDto>>
      */
     protected function getCartesianGrid(): array
     {
@@ -254,7 +254,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     /**
      * Maps X and Y Cartesian coordinates to row and cell indexes (handling cells that span multiple rows and/or
      * columns)
-     * @return array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     * @return array<int, array<int, ?CrosstabCellIndexDto>>
      */
     protected function buildCartesianGrid(): array
     {
@@ -305,7 +305,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
                     }
                 }
 
-                $grid[$currentY][$currentX] = new CrosstabIndexCellIndexDto($i, $ii);
+                $grid[$currentY][$currentX] = new CrosstabCellIndexDto($i, $ii);
 
                 $currentX += $cell->colspan;
             }
@@ -416,7 +416,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
      * @return array{
      *     rows: array<int, CrosstabRow>,
      *     matrix: list<list<CrosstabDataItem>>,
-     *     cartesianGrid: array<int, array<int, ?CrosstabIndexCellIndexDto>>
+     *     cartesianGrid: array<int, array<int, ?CrosstabCellIndexDto>>
      * }
      */
     public function __serialize(): array

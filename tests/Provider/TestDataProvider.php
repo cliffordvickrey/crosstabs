@@ -7,7 +7,7 @@ namespace CliffordVickrey\Crosstabs\Tests\Provider;
 use CliffordVickrey\Crosstabs\Crosstab\Crosstab;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabCell;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
-use CliffordVickrey\Crosstabs\Crosstab\CrosstabIndexCellIndexDto;
+use CliffordVickrey\Crosstabs\Crosstab\CrosstabCellIndexDto;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabRow;
 use CliffordVickrey\Crosstabs\CrosstabBuilder;
 use CliffordVickrey\Crosstabs\Exception\CrosstabUnexpectedValueException;
@@ -94,7 +94,7 @@ class TestDataProvider
             Crosstab::class,
             CrosstabCell::class,
             CrosstabDataItem::class,
-            CrosstabIndexCellIndexDto::class,
+            CrosstabCellIndexDto::class,
             CrosstabRow::class
         ]]);
 
