@@ -112,7 +112,7 @@ class CrosstabOptions
         if (!empty($categories)) {
             $layer = CrosstabVariable::__set_state([
                 'name' => $layer->name,
-                'description' => $layer->name,
+                'description' => $layer->description,
                 'categories' => $categories
             ]);
         }
