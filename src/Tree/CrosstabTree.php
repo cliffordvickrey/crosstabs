@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CliffordVickrey\Crosstabs\Tree;
 
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use CliffordVickrey\Crosstabs\Options\CrosstabCategory;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
@@ -152,7 +152,7 @@ final class CrosstabTree implements Countable, OuterIterator
         }
 
         // @codeCoverageIgnoreStart
-        throw new CrosstabOutOfBoundException('Iterator is not valid');
+        throw new CrosstabOutOfBoundsException('Iterator is not valid');
         // @codeCoverageIgnoreEnd
     }
 
@@ -228,7 +228,7 @@ final class CrosstabTree implements Countable, OuterIterator
     public function getFirstAndLastVariablesInTree(): array
     {
         if (null === $this->firstVariableInTree) {
-            throw new CrosstabOutOfBoundException('No variables are in the tree');
+            throw new CrosstabOutOfBoundsException('No variables are in the tree');
         }
 
         $lastVariable = $this->lastVariableInTree ?? $this->firstVariableInTree;

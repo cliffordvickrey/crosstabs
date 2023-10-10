@@ -6,7 +6,7 @@ namespace CliffordVickrey\Crosstabs\Crosstab;
 
 use ArrayAccess;
 use ArrayIterator;
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use Countable;
 use IteratorAggregate;
 use JsonSerializable;
@@ -158,7 +158,7 @@ class CrosstabRow implements ArrayAccess, Countable, IteratorAggregate, JsonSeri
             return $cell;
         }
 
-        throw CrosstabOutOfBoundException::fromIllegalOffset($offset);
+        throw CrosstabOutOfBoundsException::fromIllegalOffset($offset);
     }
 
     /**

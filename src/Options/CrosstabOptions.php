@@ -24,9 +24,9 @@ class CrosstabOptions
     /** @var list<string|array{name: non-empty-string, description?: string}|CrosstabCategory> */
     protected array $colVariableCategories = [];
     /** @var non-empty-string|null */
-    protected ?string $keyN = 'n';
+    protected ?string $keyFrequency = 'n';
     /** @var non-empty-string|null */
-    protected ?string $keyWeightedN = 'weight';
+    protected ?string $keyWeightedFrequency = 'weight';
     /** @var list<CrosstabVariable> */
     protected array $layers = [];
     /** @var non-empty-string */
@@ -160,23 +160,23 @@ class CrosstabOptions
     /**
      * Sets the key in the source data representing the number of cases in a row. If this information is absent, each
      * row will be treated as a single case
-     * @param non-empty-string|null $keyN
+     * @param non-empty-string|null $keyFrequency
      * @return void
      */
-    public function setKeyN(?string $keyN): void
+    public function setKeyFrequency(?string $keyFrequency): void
     {
-        $this->keyN = $keyN;
+        $this->keyFrequency = $keyFrequency;
     }
 
     /**
      * Sets the key in the source data representing row weight. If this information is absent, each row will be weighed
      * equally
-     * @param non-empty-string|null $keyWeightedN
+     * @param non-empty-string|null $keyWeightedFrequency
      * @return void
      */
-    public function setKeyWeightedN(?string $keyWeightedN): void
+    public function setKeyWeightedFrequency(?string $keyWeightedFrequency): void
     {
-        $this->keyWeightedN = $keyWeightedN;
+        $this->keyWeightedFrequency = $keyWeightedFrequency;
     }
 
     /**

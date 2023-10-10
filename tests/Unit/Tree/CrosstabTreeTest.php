@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Tests\Unit\Tree;
 
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tests\Provider\TestDataProvider;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
@@ -45,7 +45,7 @@ class CrosstabTreeTest extends TestCase
 
         $tree = new CrosstabTree(new CrosstabVariableCollection([]));
 
-        $this->expectException(CrosstabOutOfBoundException::class);
+        $this->expectException(CrosstabOutOfBoundsException::class);
         $this->expectExceptionMessage('No variables are in the tree');
         $tree->getFirstAndLastVariablesInTree();
     }
@@ -76,7 +76,7 @@ class CrosstabTreeTest extends TestCase
 
         self::assertNull($this->tree->key());
 
-        $this->expectException(CrosstabOutOfBoundException::class);
+        $this->expectException(CrosstabOutOfBoundsException::class);
         $this->expectExceptionMessage('Iterator is invalid');
         $this->tree->current();
     }

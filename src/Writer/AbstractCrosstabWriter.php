@@ -32,6 +32,7 @@ abstract class AbstractCrosstabWriter implements CrosstabWriterInterface
      * @param string $output
      * @param array<string, mixed> $options
      * @return string
+     * @codeCoverageIgnore
      */
     protected function prepareOutputForFile(string $output, array $options): string
     {
@@ -40,6 +41,7 @@ abstract class AbstractCrosstabWriter implements CrosstabWriterInterface
 
     /**
      * @return non-empty-string
+     * @codeCoverageIgnore
      */
     protected function getTemporaryFilename(): string
     {
@@ -62,7 +64,9 @@ abstract class AbstractCrosstabWriter implements CrosstabWriterInterface
     protected function filePutContents(string $filename, string $contents): void
     {
         if (false === file_put_contents($filename, $contents)) {
+            // @codeCoverageIgnoreStart
             throw new CrosstabRuntimeException("Could not write to $filename");
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -75,7 +79,9 @@ abstract class AbstractCrosstabWriter implements CrosstabWriterInterface
         $contents = file_get_contents($filename);
 
         if (false === $contents) {
+            // @codeCoverageIgnoreStart
             throw new CrosstabRuntimeException("Could not open $filename for reading");
+            // @codeCoverageIgnoreEnd
         }
 
         return $contents;

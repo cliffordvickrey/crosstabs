@@ -7,8 +7,11 @@ or more categorical variables.
 ## Requirements
 
 * PHP 8.2 or higher
-* bcmath extension installed
-* intl extension installed
+
+## Suggested Requirements
+
+Ensure that the ``intl`` and ``bcmath`` extensions are installed for, respectively, international number formatting and
+better mathematical precision.
 
 ## Installation
 
@@ -45,7 +48,7 @@ $rawData = [
 
 // the builder does exactly what it says. Set a bunch of options and call the "build" method
 $builder = new \CliffordVickrey\Crosstabs\CrosstabBuilder();
-$builder->setRawData($rawData);;
+$builder->setRawData($rawData);
 $builder->setTitle('Browser Usage by Platform');
 $builder->setColVariableName('Browser');
 $builder->setRowVariableName('Platform');
@@ -77,7 +80,7 @@ echo $crosstab->write();
 
 // want a simpler display? Let's just show a frequency distribution of browsers
 $builder = new \CliffordVickrey\Crosstabs\CrosstabBuilder();
-$builder->setRawData($rawData);;
+$builder->setRawData($rawData);
 $builder->setTitle('Browser Usage');
 $builder->setRowVariableName('Browser');
 $builder->setShowPercent(true);
@@ -120,12 +123,12 @@ Sets the name of the column variable in the raw data
 Explicitly defines the categories of the column variable in the raw data; otherwise, they are inferred. Useful for 
 relabeling/recoding categorical values
 
-#### `@setKeyN(?string $keyN): void`
+#### `@setKeyFrequency(?string $keyFrequency): void`
 
 Sets the key in the source data representing the number of cases in a row. If this information is absent, each row will 
 be treated as a single case. Defaults to "n"
 
-#### `@setKeyWeightedN(?string $keyWeightedN): void`
+#### `@setKeyWeightedFrequency(?string $keyWeightedFrequency): void`
 
 Sets the key in the source data representing row weight. If this information is absent, each row will be weighed 
 equally. Defaults to "weight"

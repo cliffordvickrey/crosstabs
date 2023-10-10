@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Tree;
 
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use RecursiveIterator;
 
 use function count;
@@ -95,6 +95,6 @@ class CrosstabTreeIterator implements RecursiveIterator
             return $obj;
         }
 
-        throw new CrosstabOutOfBoundException('Iterator is invalid');
+        throw new CrosstabOutOfBoundsException('Iterator is invalid');
     }
 }

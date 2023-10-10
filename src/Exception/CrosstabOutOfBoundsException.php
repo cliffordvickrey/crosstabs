@@ -9,7 +9,7 @@ use OutOfBoundsException;
 
 use function sprintf;
 
-class CrosstabOutOfBoundException extends OutOfBoundsException implements CrosstabThrowable
+class CrosstabOutOfBoundsException extends OutOfBoundsException implements CrosstabThrowable
 {
     /**
      * @param mixed $offset

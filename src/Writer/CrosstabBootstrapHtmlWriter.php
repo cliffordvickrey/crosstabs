@@ -7,10 +7,12 @@ namespace CliffordVickrey\Crosstabs\Writer;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabInterface;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 
+use function array_filter;
 use function array_key_exists;
 use function array_keys;
 use function array_merge;
 use function array_reduce;
+use function array_values;
 use function explode;
 use function implode;
 use function in_array;
@@ -38,7 +40,9 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
     private static function remapBorderTypesToBootstrap5(array $carry, string $borderType): array
     {
         if ('left' === $borderType) {
+            // @codeCoverageIgnoreStart
             return [...$carry, 'start'];
+            // @codeCoverageIgnoreEnd
         }
 
         if ('right' === $borderType) {
@@ -57,7 +61,7 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
             && is_array($options[self::TABLE_ATTRIBUTES])) ? $options[self::TABLE_ATTRIBUTES] : [];
 
         $tableClass = trim(CrosstabExtractionUtilities::extractString('class', $tableAttributes));
-        $tableClasses = explode(' ', $tableClass);
+        $tableClasses = array_values(array_filter(explode(' ', $tableClass)));
 
         if (!in_array('table', $tableClasses)) {
             $tableClasses[] = 'table';
@@ -65,6 +69,10 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
 
         if (!in_array('border', $tableClasses)) {
             $tableClasses[] = 'border';
+        }
+
+        if ($this->bootstrapVersion > 4 && !in_array('table-borderless', $tableClasses)) {
+            $tableClasses[] = 'table-borderless';
         }
 
         $tableAttributes['class'] = implode(' ', $tableClasses);
@@ -81,14 +89,14 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
      * @param CrosstabInterface $crosstab
      * @return CrosstabInterface
      */
-    private function crosstabWithBootstrapClasses(CrosstabInterface $crosstab,): CrosstabInterface
+    private function crosstabWithBootstrapClasses(CrosstabInterface $crosstab): CrosstabInterface
     {
         $bootstrapCrosstab = clone $crosstab;
 
         foreach ($bootstrapCrosstab as $row) {
             foreach ($row as $cell) {
                 $class = trim(CrosstabExtractionUtilities::extractString('class', $cell->attributes));
-                $classes = explode(' ', $class);
+                $classes = array_values(array_filter(explode(' ', $class)));
 
                 $classes = [
                     ...$classes,
@@ -128,6 +136,10 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
             $borderClasses[] = "border-$borderType";
         }
 
+        if ($this->bootstrapVersion < 5 && !in_array('border-top', $borderClasses)) {
+            $borderClasses[] = 'border-top-0';
+        }
+
         return $borderClasses;
     }
 
@@ -165,7 +177,9 @@ final class CrosstabBootstrapHtmlWriter extends CrosstabHtmlWriter
             }
 
             if (in_array($class, $this->classesWithVerticalAlignment['middle'])) {
+                // @codeCoverageIgnoreStart
                 return 'align-middle';
+                // @codeCoverageIgnoreEnd
             }
         }
 

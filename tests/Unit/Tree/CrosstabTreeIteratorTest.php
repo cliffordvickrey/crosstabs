@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Tests\Unit\Tree;
 
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeIterator;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeVariableNode;
@@ -47,7 +47,7 @@ class CrosstabTreeIteratorTest extends TestCase
 
         self::assertNull($this->it->key());
 
-        $this->expectException(CrosstabOutOfBoundException::class);
+        $this->expectException(CrosstabOutOfBoundsException::class);
         $this->expectExceptionMessage('Iterator is invalid');
         $this->it->current();
     }

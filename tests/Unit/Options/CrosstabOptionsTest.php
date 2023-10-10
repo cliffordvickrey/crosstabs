@@ -31,8 +31,8 @@ class CrosstabOptionsTest extends TestCase
             'name' => 'col category name',
             'description' => 'col category description'
         ]]);
-        $options->setKeyN('N');
-        $options->setKeyWeightedN('weighted N');
+        $options->setKeyFrequency('N');
+        $options->setKeyWeightedFrequency('weighted N');
         $options->setLayers($layers);
         $options->setLocale('fr_CA');
         $options->setMathematicalScale(14);
@@ -74,8 +74,8 @@ class CrosstabOptionsTest extends TestCase
                 'name' => 'col category name',
                 'description' => 'col category description'
             ]],
-            'keyN' => 'N',
-            'keyWeightedN' => 'weighted N',
+            'keyFrequency' => 'N',
+            'keyWeightedFrequency' => 'weighted N',
             'layers' => [CrosstabVariable::__set_state([
                 'description' => 'layer description',
                 'name' => 'layer name',

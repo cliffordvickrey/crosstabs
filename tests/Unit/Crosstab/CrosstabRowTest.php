@@ -6,7 +6,7 @@ namespace CliffordVickrey\Crosstabs\Tests\Unit\Crosstab;
 
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabCell;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabRow;
-use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
+use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundsException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -159,7 +159,7 @@ class CrosstabRowTest extends TestCase
     public function testOffsetGet(): void
     {
         self::assertInstanceOf(CrosstabCell::class, $this->row[0]);
-        $this->expectException(CrosstabOutOfBoundException::class);
+        $this->expectException(CrosstabOutOfBoundsException::class);
         $this->expectExceptionMessage('Illegal offset, "1"');
         $this->row[1]; // @phpstan-ignore-line
     }

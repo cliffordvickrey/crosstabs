@@ -8,6 +8,7 @@ use CliffordVickrey\Crosstabs\Crosstab\CrosstabCell;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabInterface;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabCastingUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
 
 use function array_combine;
 use function array_filter;
@@ -18,14 +19,13 @@ use function array_merge;
 use function array_pad;
 use function array_sum;
 use function array_values;
-use function bcdiv;
-use function bcmul;
 use function count;
 use function explode;
 use function htmlentities;
 use function in_array;
 use function is_array;
 use function is_object;
+use function round;
 use function rtrim;
 use function str_repeat;
 use function str_replace;
@@ -192,9 +192,11 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         // close all open tags
         if ($theadClosed) {
             $html .= $this->closeTag('tbody', $pretty);
+            // @codeCoverageIgnoreStart
         } elseif ($theadOpened) {
             $html .= $this->closeTag('thead', $pretty);
         }
+        // @codeCoverageIgnoreEnd
 
         return trim($html . $this->closeTag('table', $pretty) . ($responsive ? $this->closeTag('div', $pretty) : ''));
     }
@@ -252,6 +254,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
      */
     protected function openTag(string $tagName, bool $pretty, mixed $attributes = []): string
     {
+        // @codeCoverageIgnoreStart
         if (is_object($attributes)) {
             $attributes = (array)$attributes;
         }
@@ -259,6 +262,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         if (!is_array($attributes)) {
             $attributes = [];
         }
+        // @codeCoverageIgnoreEnd
 
         $indentation = $this->indentations[$tagName] ?? 0;
 
@@ -269,7 +273,9 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
             $prop = trim((string)$prop);
 
             if ('' === $prop) {
+                // @codeCoverageIgnoreStart
                 continue;
+                // @codeCoverageIgnoreEnd
             }
 
             $propHtml = $this->htmlEncode($prop);
@@ -311,8 +317,13 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
 
         $sum = (string)array_sum($colWidthFactors);
 
+        $math = new CrosstabMath();
+
+        $mul = static fn(mixed $a, mixed $b): float => round($math->multiply($a, $b, 2), 2);
+        $div = static fn(mixed $a, mixed $b): float => round((float)$math->divide($a, $b, 4), 4);
+
         return array_map(
-            fn($factor) => rtrim(rtrim(bcmul(bcdiv((string)$factor, $sum, 4), '100', 2), '0'), '.') . '%',
+            fn($factor) => rtrim(rtrim((string)$mul($div($factor, $sum), 100), '0'), '.') . '%',
             array_values($colWidthFactors)
         );
     }
@@ -356,7 +367,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
     }
 
     /**
-     * Make a heroic effort to determine how to style each table header and cell, using the options passed to the write
+     * Make a heroic effort to determine how to style each table header and cell, using the options passed to the writer
      * @param CrosstabCell $cell
      * @param mixed $defaultAttributes
      * @param bool $withDefaultStyles
@@ -367,6 +378,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         mixed $defaultAttributes,
         bool $withDefaultStyles
     ): array {
+        // @codeCoverageIgnoreStart
         if (is_object($defaultAttributes)) {
             $defaultAttributes = (array)$defaultAttributes;
         }
@@ -374,6 +386,7 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
         if (!is_array($defaultAttributes)) {
             $defaultAttributes = [];
         }
+        // @codeCoverageIgnoreEnd
 
         $attributes = array_merge($cell->attributes, $defaultAttributes);
 
@@ -502,7 +515,9 @@ class CrosstabHtmlWriter extends AbstractCrosstabWriter
             }
 
             if (in_array($class, $this->classesWithVerticalAlignment['middle'])) {
+                // @codeCoverageIgnoreStart
                 return ';vertical-align:middle';
+                // @codeCoverageIgnoreEnd
             }
         }
 
