@@ -1,8 +1,10 @@
 # CliffordVickrey\Crosstabs
 
-Highly customizable abstraction for generating SPSS-like tabulations, cross-tabulations (also known as crosstabs or 
-contingency tables), and layered cross-tabulations in PHP. These are useful in showing the relationship between two 
+Highly customizable abstraction for generating SPSS-like tabulations, cross-tabulations (also known as crosstabs or
+contingency tables), and layered cross-tabulations in PHP. These are useful in showing the relationship between two
 or more categorical variables.
+
+[![Build Status](https://github.com/cliffordvickrey/crosstabs/actions/workflows/build.yml/badge.svg)](https://github.com/cliffordvickrey/crosstabs/actions)
 
 ## Requirements
 
@@ -93,13 +95,13 @@ echo $crosstab->write();
 
 ### The builder: `\CliffordVickrey\Crosstab\CrosstabBuilder`
 
-The builder is used to configure and create the desired table. When configuring, you're always going to want to set 
-`rawData` and `rowVariableName`. In most cases, you'll  also want to set `colVariableName` (if you're visualizing two or
+The builder is used to configure and create the desired table. When configuring, you're always going to want to set
+`rawData` and `rowVariableName`. In most cases, you'll also want to set `colVariableName` (if you're visualizing two or
 more categorical variables).
 
 #### `@build(): void`
 
-Builds the table. Throws `\CliffordVickrey\Crosstab\Exception\CrosstabInvalidArgumentException` when the options are 
+Builds the table. Throws `\CliffordVickrey\Crosstab\Exception\CrosstabInvalidArgumentException` when the options are
 invalid
 
 #### `@addLayer(CrosstabVariable|array|string $layer, ?string $description = null, ?array $categories = []): void`
@@ -120,17 +122,17 @@ Sets the name of the column variable in the raw data
 
 #### `@setColVariableCategories(array $colVariableCategories): void`
 
-Explicitly defines the categories of the column variable in the raw data; otherwise, they are inferred. Useful for 
+Explicitly defines the categories of the column variable in the raw data; otherwise, they are inferred. Useful for
 relabeling/recoding categorical values
 
 #### `@setKeyFrequency(?string $keyFrequency): void`
 
-Sets the key in the source data representing the number of cases in a row. If this information is absent, each row will 
+Sets the key in the source data representing the number of cases in a row. If this information is absent, each row will
 be treated as a single case. Defaults to "n"
 
 #### `@setKeyWeightedFrequency(?string $keyWeightedFrequency): void`
 
-Sets the key in the source data representing row weight. If this information is absent, each row will be weighed 
+Sets the key in the source data representing row weight. If this information is absent, each row will be weighed
 equally. Defaults to "weight"
 
 #### `@setLayers(CrosstabVariableCollection|iterable $layers = []): void`
@@ -197,7 +199,7 @@ for a list of allowable options. Defaults to `CrosstabPercentType::TOTAL`
 #### `@setRawData(iterable $rawData): void`
 
 The raw data to tabulate. Should be an iterable of iterables (rows). Rows are cast to arrays. The "n" and "weight" keys
-in each array are optionally used in computation, should you need to represent more than one case per row or capture 
+in each array are optionally used in computation, should you need to represent more than one case per row or capture
 survey weighting
 
 #### `@setrowVariableDescription(?string $rowVariableDescription): void`
@@ -223,12 +225,12 @@ Sets the scale of formatted percentage values in the table. Defaults to 2
 
 #### `@setShowExpectedFrequency(bool $showExpectedFrequency): void`
 
-Sets whether to display expected frequencies (e.g., the values we'd expect if no relationship existed between X and Y) 
+Sets whether to display expected frequencies (e.g., the values we'd expect if no relationship existed between X and Y)
 in the table. Default to `FALSE`
 
 #### `@setShowExpectedPercent(bool $showExpectedPercent): void`
 
-Sets whether to display expected percentages (e.g., the values we'd expect if no relationship existed between X and Y) 
+Sets whether to display expected percentages (e.g., the values we'd expect if no relationship existed between X and Y)
 in the table. Defaults to `FALSE`
 
 #### `@setShowFrequency(bool $showFrequency): void`
@@ -263,7 +265,7 @@ Sets an optional title to appear in the table header. Defaults to `NULL` (i.e., 
 
 ### The crosstab: `CliffordVickrey\Crosstabs\Crosstab`
 
-Encapsulates the data and presentation elements of a crosstab. Implements `\Traversable`; traversal will return row 
+Encapsulates the data and presentation elements of a crosstab. Implements `\Traversable`; traversal will return row
 objects (`CliffordVickrey\Crosstabs\Crosstab\CrosstabRow`), which themselves provide cell objects
 (`CliffordVickrey\Crosstabs\Crosstab\CrosstabRow`) when traversed. These cells contain the table's presentation data,
 whereas the matrix (exposed by a getter) contains the tabulated data.
@@ -279,7 +281,7 @@ the harder it is for a test statistic to achieve significance. Formula is `(rowC
 
 #### `@getChiSquared(bool $weighted = false, ?int $scale = null): float`
 
-Gets the chi-squared test statistic. The higher the value, and the lower the number of cells used as factors to compute 
+Gets the chi-squared test statistic. The higher the value, and the lower the number of cells used as factors to compute
 the statistic, the more likely there is to be a relationship between the population parameters of the row and column
 variables
 
@@ -289,7 +291,7 @@ Gets a rectangular matrix of value objects, representing data within the crossta
 
 #### `@write(array $options = [], ?CrosstabWriterInterface $writer = null): string`
 
-Convenience method for writing a crosstab to a string. If no writer provided, the default HTML writer 
+Convenience method for writing a crosstab to a string. If no writer provided, the default HTML writer
 (`CliffordVickrey\Crosstabs\Writer\CrosstabHtmlWriter`) will be used. See the class constants of the method for output
 options. Returns the string output
 
@@ -298,7 +300,3 @@ options. Returns the string output
 Convenience method for writing a crosstab to a file. If no writer provided, the default HTML writer
 (`CliffordVickrey\Crosstabs\Writer\CrosstabHtmlWriter`) will be used. See the class constants of the method for output
 options. If no filename is provided, a temporary file will be created. Returns the filename written to
-
-## Todo
-
-Write full test suite
