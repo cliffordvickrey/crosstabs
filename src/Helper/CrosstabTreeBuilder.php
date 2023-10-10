@@ -11,6 +11,7 @@ use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeCategoryPayload;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 use WeakMap;
 
@@ -24,6 +25,7 @@ use function array_pop;
  */
 final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
 {
+    private CrosstabMath $math;
     private CrosstabParamsSerializerInterface $serializer;
     /** @var WeakMap<CrosstabTree, list<list<CrosstabDataItem>>> */
     private WeakMap $treeToMatrixMap;
@@ -33,6 +35,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
      */
     public function __construct(?CrosstabParamsSerializerInterface $serializer = null)
     {
+        $this->math = new CrosstabMath();
         $this->serializer = $serializer ?? new CrosstabParamsSerializer();
         /** @psalm-suppress PropertyTypeCoercion */
         $this->treeToMatrixMap = new WeakMap();
@@ -108,9 +111,9 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $colSubTotalN = $totals['n'][$colSubTotalKey] ?? 0.0;
             $colSubTotalWeightedN = $totals['weightedN'][$colSubTotalKey] ?? 0.0;
 
-            $expectedN = CrosstabMathUtilities::multiply(
+            $expectedN = $this->math->multiply(
                 $colSubTotalN,
-                (float)CrosstabMathUtilities::divide(
+                (float)$this->math->divide(
                     $rowSubTotalN,
                     $totalN,
                     $scale
@@ -118,9 +121,9 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
                 $scale
             );
 
-            $expectedWeightedN = CrosstabMathUtilities::multiply(
+            $expectedWeightedN = $this->math->multiply(
                 $colSubTotalWeightedN,
-                (float)CrosstabMathUtilities::divide(
+                (float)$this->math->divide(
                     $rowSubTotalWeightedN,
                     $totalWeightedN,
                     $scale
@@ -131,15 +134,15 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             $of = $this->getPercentDivisors($percentType, $totals, $rowVar, $colVar, $query);
 
             $payload->expectedFrequency = $expectedN;
-            $payload->expectedPercent = CrosstabMathUtilities::divide($expectedN, $of['unweighted'], $scale);
+            $payload->expectedPercent = $this->math->divide($expectedN, $of['unweighted'], $scale);
             $payload->frequency = $n;
             $payload->isTotal = count(array_filter($query, is_null(...))) > 0;
             $payload->params = $query;
-            $payload->percent = CrosstabMathUtilities::divide($n, $of['unweighted'], $scale);
+            $payload->percent = $this->math->divide($n, $of['unweighted'], $scale);
             $payload->weightedExpectedFrequency = $expectedWeightedN;
-            $payload->weightedExpectedPercent = CrosstabMathUtilities::divide($expectedWeightedN, $of['weighted'], $scale);
+            $payload->weightedExpectedPercent = $this->math->divide($expectedWeightedN, $of['weighted'], $scale);
             $payload->weightedFrequency = $weightedN;
-            $payload->weightedPercent = CrosstabMathUtilities::divide($weightedN, $of['weighted'], $scale);
+            $payload->weightedPercent = $this->math->divide($weightedN, $of['weighted'], $scale);
 
             if ($payload->isTotal) {
                 continue;

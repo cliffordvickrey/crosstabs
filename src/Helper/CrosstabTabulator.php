@@ -8,6 +8,7 @@ use CliffordVickrey\Crosstabs\Exception\CrosstabLogicException;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabCastingUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 
 use function array_flip;
@@ -18,6 +19,7 @@ use function array_intersect_key;
  */
 final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
 {
+    private CrosstabMath $math;
     private CrosstabParamsSerializerInterface $serializer;
 
     /**
@@ -25,6 +27,7 @@ final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
      */
     public function __construct(?CrosstabParamsSerializerInterface $serializer = null)
     {
+        $this->math = new CrosstabMath();
         $this->serializer = $serializer ?? new CrosstabParamsSerializer();
     }
 
@@ -67,7 +70,7 @@ final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
                 if (!isset($totals['n'][$key])) {
                     $totals['n'][$key] = (float)$sourceRow->n;
                 } else {
-                    $totals['n'][$key] = CrosstabMathUtilities::add(
+                    $totals['n'][$key] = $this->math->add(
                         $totals['n'][$key],
                         (float)$sourceRow->n,
                         $scale
@@ -77,7 +80,7 @@ final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
                 if (!isset($totals['weightedN'][$key])) {
                     $totals['weightedN'][$key] = (float)$sourceRow->weightedN;
                 } else {
-                    $totals['weightedN'][$key] = CrosstabMathUtilities::add(
+                    $totals['weightedN'][$key] = $this->math->add(
                         $totals['weightedN'][$key],
                         (float)$sourceRow->weightedN,
                         $scale

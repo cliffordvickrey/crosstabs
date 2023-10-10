@@ -1,15 +1,13 @@
 <?php
 
+/** @noinspection PhpFullyQualifiedNameUsageInspection */
+
+/** @noinspection PhpComposerExtensionStubsInspection */
+
 declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\Utilities;
 
-use function bcadd;
-use function bccomp;
-use function bcdiv;
-use function bcmul;
-use function bcpow;
-use function bcsub;
 use function floor;
 
 /**
@@ -61,7 +59,7 @@ class CrosstabMathUtilities
     {
         $addendA = (string)(CrosstabCastingUtilities::toNumeric($addendA) ?? 0.0);
         $addendB = (string)(CrosstabCastingUtilities::toNumeric($addendB) ?? 0.0);
-        return (float)bcadd($addendA, $addendB, $scale);
+        return (float)\bcadd($addendA, $addendB, $scale);
     }
 
     /**
@@ -74,7 +72,7 @@ class CrosstabMathUtilities
     {
         $minuend = (string)(CrosstabCastingUtilities::toNumeric($minuend) ?? 0.0);
         $subtrahend = (string)(CrosstabCastingUtilities::toNumeric($subtrahend) ?? 0.0);
-        return (float)bcsub($minuend, $subtrahend, $scale);
+        return (float)\bcsub($minuend, $subtrahend, $scale);
     }
 
 
@@ -88,13 +86,13 @@ class CrosstabMathUtilities
     {
         $divisor = (string)(CrosstabCastingUtilities::toNumeric($divisor) ?? 0.0);
 
-        if (0 === bccomp('0', $divisor, $scale)) {
+        if (0 === \bccomp('0', $divisor, $scale)) {
             return null;
         }
 
         $dividend = (string)(CrosstabCastingUtilities::toNumeric($dividend) ?? 0.0);
 
-        return (float)bcdiv($dividend, $divisor, $scale);
+        return (float)\bcdiv($dividend, $divisor, $scale);
     }
 
     /**
@@ -107,7 +105,7 @@ class CrosstabMathUtilities
     {
         $factorA = (string)(CrosstabCastingUtilities::toNumeric($factorA) ?? 0.0);
         $factorB = (string)(CrosstabCastingUtilities::toNumeric($factorB) ?? 0.0);
-        return (float)bcmul($factorA, $factorB, $scale);
+        return (float)\bcmul($factorA, $factorB, $scale);
     }
 
     /**
@@ -120,6 +118,6 @@ class CrosstabMathUtilities
     {
         $num = (string)(CrosstabCastingUtilities::toNumeric($num) ?? 0.0);
         $exponent = (string)(CrosstabCastingUtilities::toNumeric($exponent) ?? 0.0);
-        return (float)bcpow($num, $exponent, $scale);
+        return (float)\bcpow($num, $exponent, $scale);
     }
 }

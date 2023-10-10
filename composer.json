@@ -26,10 +26,10 @@
     }
   ],
   "require": {
-    "ext-bcmath": "*",
     "php": ">=8.2"
   },
   "require-dev": {
+    "ext-bcmath": "*",
     "ext-intl": "*",
     "phpstan/phpstan": "^1.0",
     "phpunit/phpunit": "^10.0",
@@ -37,6 +37,7 @@
     "vimeo/psalm": "^5.15"
   },
   "suggest": {
+    "ext-bcmath": "For more precise floating point math",
     "ext-intl": "For localized number formatting"
   },
   "scripts": {

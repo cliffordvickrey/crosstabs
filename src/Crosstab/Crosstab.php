@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CliffordVickrey\Crosstabs\Crosstab;
 
 use ArrayIterator;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 use CliffordVickrey\Crosstabs\Writer\CrosstabHtmlWriter;
 use CliffordVickrey\Crosstabs\Writer\CrosstabWriterInterface;
@@ -381,15 +382,17 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
 
         $chiSquared = 0.0;
 
+        $math = new CrosstabMath();
+
         foreach ($this->matrix as $dataItems) {
             foreach ($dataItems as $dataItem) {
                 $n = $weighted ? $dataItem->weightedFrequency : $dataItem->frequency;
                 $expected = $weighted ? $dataItem->weightedExpectedFrequency : $dataItem->expectedFrequency;
 
-                $difference = CrosstabMathUtilities::subtract($n, $expected, $scale);
-                $differenceSquared = CrosstabMathUtilities::pow($difference, 2, $scale);
-                $quantity = CrosstabMathUtilities::divide($differenceSquared, $expected, $scale);
-                $chiSquared = CrosstabMathUtilities::add($chiSquared, $quantity, $scale);
+                $difference = $math->subtract($n, $expected, $scale);
+                $differenceSquared = $math->pow($difference, 2, $scale);
+                $quantity = $math->divide($differenceSquared, $expected, $scale);
+                $chiSquared = $math->add($chiSquared, $quantity, $scale);
             }
         }
 
