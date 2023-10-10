@@ -3,7 +3,6 @@
 <ruleset name="PHP_CodeSniffer">
     <description>PHPCS configuration file.</description>
 
-    <file>dev</file>
     <file>src</file>
     <file>tests</file>
 

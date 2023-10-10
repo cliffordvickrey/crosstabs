@@ -68,7 +68,11 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
     {
         $this->assertValidOptions();
 
-        $sourceData = CrosstabSourceDataCollection::fromRawData($this->rawData, $this->keyFrequency, $this->keyWeightedFrequency);
+        $sourceData = CrosstabSourceDataCollection::fromRawData(
+            $this->rawData,
+            $this->keyFrequency,
+            $this->keyWeightedFrequency
+        );
 
         if (0 === count($sourceData)) {
             return $this->buildEmptyCrossTab();
