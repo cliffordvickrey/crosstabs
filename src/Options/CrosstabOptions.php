@@ -204,7 +204,7 @@ class CrosstabOptions
                 $layersArr = $layers;
             }
 
-            $layers = CrosstabVariableCollection::__set_state($layersArr);
+            $layers = CrosstabVariableCollection::__set_state(['variables' => $layersArr]);
         }
 
         foreach ($layers as $layer) {

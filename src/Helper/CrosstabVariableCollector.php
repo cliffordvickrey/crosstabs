@@ -93,7 +93,7 @@ final readonly class CrosstabVariableCollector implements CrosstabVariableCollec
             $parsedVariables[] = new CrosstabVariable($variable->name, $variable->description, $categories);
         }
 
-        return CrosstabVariableCollection::__set_state(self::inLeftToRightOrder($parsedVariables));
+        return CrosstabVariableCollection::__set_state(['variables' => self::inLeftToRightOrder($parsedVariables)]);
     }
 
     /**

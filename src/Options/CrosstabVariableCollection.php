@@ -11,6 +11,7 @@ use IteratorAggregate;
 use Traversable;
 
 use function count;
+use function is_array;
 use function is_iterable;
 use function is_object;
 use function is_string;
@@ -37,9 +38,11 @@ final readonly class CrosstabVariableCollection implements Countable, IteratorAg
      */
     public static function __set_state(array $an_array): self
     {
+        $arr = (isset($an_array['variables']) && is_array($an_array['variables'])) ? $an_array['variables'] : $an_array;
+
         $variables = [];
 
-        foreach ($an_array as $rawVariable) {
+        foreach ($arr as $rawVariable) {
             $variables[] = self::parseRawVariable($rawVariable);
         }
 
@@ -60,7 +63,7 @@ final readonly class CrosstabVariableCollection implements Countable, IteratorAg
             return new CrosstabVariable($rawVariable);
         }
 
-        if (is_object($rawVariable)) {
+        if (is_object($rawVariable) && !is_iterable($rawVariable)) {
             $rawVariable = (array)$rawVariable;
         }
 

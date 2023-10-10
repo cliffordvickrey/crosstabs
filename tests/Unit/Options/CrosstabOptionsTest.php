@@ -80,7 +80,7 @@ class CrosstabOptionsTest extends TestCase
                 'description' => 'layer description',
                 'name' => 'layer name',
                 'categories' => []
-            ]),],
+            ])],
             'locale' => 'fr_CA',
             'mathematicalScale' => 14,
             'messageExpectedFrequency' => 'expected frequency',

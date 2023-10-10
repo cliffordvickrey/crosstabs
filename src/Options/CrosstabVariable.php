@@ -9,6 +9,7 @@ use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use Traversable;
 
 use function array_key_exists;
+use function is_array;
 use function is_iterable;
 use function is_object;
 use function is_string;
@@ -75,7 +76,7 @@ final readonly class CrosstabVariable
             return new CrosstabCategory($rawCategory);
         }
 
-        if (is_object($rawCategory)) {
+        if (is_object($rawCategory) && !is_iterable($rawCategory)) {
             $rawCategory = (array)$rawCategory;
         }
 

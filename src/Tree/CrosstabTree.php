@@ -50,14 +50,14 @@ final class CrosstabTree implements Countable, OuterIterator
      * @param non-empty-string $messageTotal
      * @param bool $root
      * @param int|null $variableCount
-     * @return CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode
+     * @return CrosstabTreeVariableNode|CrosstabTreeDataItemNode
      */
-    public function collectTreeNodes(
+    private function collectTreeNodes(
         array $variables,
         string $messageTotal,
         bool $root = false,
         ?int $variableCount = null
-    ): CrosstabTreeVariableNode|CrosstabTreeCategoryNode|CrosstabTreeDataItemNode {
+    ): CrosstabTreeVariableNode|CrosstabTreeDataItemNode {
         if (null === $variableCount) {
             $variableCount = count($variables);
             $this->count = $variableCount;
