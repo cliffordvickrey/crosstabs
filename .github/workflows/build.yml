@@ -1,12 +1,12 @@
 # GitHub Action for Build
-name: Testing Crosstabs
-on: [push, pull_request]
+name: Building Crosstabs
+on: [ push, pull_request ]
 jobs:
   build:
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        php-versions: ['8.2']
+        operating-system: [ ubuntu-latest, windows-latest, macos-latest ]
+        php-versions: [ '8.2' ]
     runs-on: ${{ matrix.operating-system }}
     steps:
       - name: Checkout
@@ -28,9 +28,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          # Use composer.json for key, if composer.lock is not committed.
-          # key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
@@ -38,3 +36,9 @@ jobs:
 
       - name: Test with phpunit
         run: composer run-script test
+
+      - name: Statically analyse with PHPStan
+        run: composer run-script analyse
+
+      - name: Statically analyse with Psalm
+        run: composer run-script psalm
