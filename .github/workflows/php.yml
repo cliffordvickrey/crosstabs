@@ -7,6 +7,11 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        php-version:
+          - "8.2"
+
     steps:
     - uses: actions/checkout@v3
 
@@ -32,4 +37,4 @@ jobs:
       run: composer run-script analyse
 
     - name: Run Psalm
-    - run: composer run-script psalm
+      run: composer run-script psalm
