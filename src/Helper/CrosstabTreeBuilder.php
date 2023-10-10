@@ -90,7 +90,9 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
             }
 
             if (!($payload instanceof CrosstabDataItem)) {
+                // @codeCoverageIgnoreStart
                 continue;
+                // @codeCoverageIgnoreEnd
             }
 
             $key = $this->serializer->serializeParams($query);

@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace CliffordVickrey\Crosstabs\Tests\Unit\Tree;
 
 use CliffordVickrey\Crosstabs\Exception\CrosstabOutOfBoundException;
-use CliffordVickrey\Crosstabs\Options\CrosstabCategory;
-use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
+use CliffordVickrey\Crosstabs\Tests\Provider\TestDataProvider;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeIterator;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeNode;
@@ -31,102 +30,8 @@ class CrosstabTreeTest extends TestCase
      */
     public function setUp(): void
     {
-        $vars = CrosstabVariableCollection::__set_state(array(
-            'variables' =>
-                array(
-                    0 =>
-                        CrosstabVariable::__set_state(array(
-                            'description' => 'Device Type',
-                            'name' => 'Device Type',
-                            'categories' =>
-                                array(
-                                    0 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Desktop',
-                                            'name' => 'Desktop',
-                                        )),
-                                    1 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Mobile Device',
-                                            'name' => 'Mobile Device',
-                                        )),
-                                    2 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Tablet',
-                                            'name' => 'Tablet',
-                                        )),
-                                ),
-                        )),
-                    1 =>
-                        CrosstabVariable::__set_state(array(
-                            'description' => 'Platform',
-                            'name' => 'Platform',
-                            'categories' =>
-                                array(
-                                    0 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'iOS',
-                                            'name' => 'iOS',
-                                        )),
-                                    1 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Linux',
-                                            'name' => 'Linux',
-                                        )),
-                                    2 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'MacOSX',
-                                            'name' => 'MacOSX',
-                                        )),
-                                    3 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Windows',
-                                            'name' => 'Windows',
-                                        )),
-                                ),
-                        )),
-                    2 =>
-                        CrosstabVariable::__set_state(array(
-                            'description' => 'Browser',
-                            'name' => 'Browser',
-                            'categories' =>
-                                array(
-                                    0 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Chrome',
-                                            'name' => 'Chrome',
-                                        )),
-                                    1 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Edge',
-                                            'name' => 'Edge',
-                                        )),
-                                    2 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Firefox',
-                                            'name' => 'Firefox',
-                                        )),
-                                    3 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'IE',
-                                            'name' => 'IE',
-                                        )),
-                                    4 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Netscape',
-                                            'name' => 'Netscape',
-                                        )),
-                                    5 =>
-                                        CrosstabCategory::__set_state(array(
-                                            'description' => 'Safari',
-                                            'name' => 'Safari',
-                                        )),
-                                ),
-                        )),
-                ),
-        ));
-
-        $this->tree = new CrosstabTree($vars);
+        $provider = new TestDataProvider();
+        $this->tree = new CrosstabTree($provider->getVariableCollection());
     }
 
     /**

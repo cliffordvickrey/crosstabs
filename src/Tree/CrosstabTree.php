@@ -151,7 +151,9 @@ final class CrosstabTree implements Countable, OuterIterator
             return $current;
         }
 
+        // @codeCoverageIgnoreStart
         throw new CrosstabOutOfBoundException('Iterator is not valid');
+        // @codeCoverageIgnoreEnd
     }
 
     /**

@@ -27,14 +27,17 @@
   ],
   "require": {
     "ext-bcmath": "*",
-    "ext-intl": "*",
     "php": ">=8.2"
   },
   "require-dev": {
+    "ext-intl": "*",
     "phpstan/phpstan": "^1.0",
     "phpunit/phpunit": "^10.0",
     "squizlabs/php_codesniffer": "^3.0",
     "vimeo/psalm": "^5.15"
+  },
+  "suggest": {
+    "ext-intl": "For localized number formatting"
   },
   "scripts": {
     "analyse": "vendor/bin/phpstan analyse",

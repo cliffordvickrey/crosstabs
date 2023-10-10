@@ -10,6 +10,7 @@ use NumberFormatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+use function extension_loaded;
 use function preg_replace;
 
 #[CoversClass(CrosstabNumberFormatterFlyweight::class)]
@@ -20,6 +21,8 @@ class CrosstabNumberFormatterFlyweightTest extends TestCase
      */
     public function testGetNumberFormatter(): void
     {
+        self::assertTrue(extension_loaded('intl'), 'PHP intl extension is missing');
+
         $flyweight = new CrosstabNumberFormatterFlyweight();
 
         // test percent format

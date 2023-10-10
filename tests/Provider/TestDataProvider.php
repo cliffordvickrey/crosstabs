@@ -6,12 +6,15 @@ namespace CliffordVickrey\Crosstabs\Tests\Provider;
 
 use CliffordVickrey\Crosstabs\Crosstab\Crosstab;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabCell;
-use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabCellIndexDto;
+use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Crosstab\CrosstabRow;
 use CliffordVickrey\Crosstabs\CrosstabBuilder;
 use CliffordVickrey\Crosstabs\Exception\CrosstabUnexpectedValueException;
+use CliffordVickrey\Crosstabs\Options\CrosstabCategory;
 use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
+use CliffordVickrey\Crosstabs\Options\CrosstabVariable;
+use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use RuntimeException;
 
 use function array_combine;
@@ -63,6 +66,89 @@ class TestDataProvider
         fclose($resource);
 
         return $rows;
+    }
+
+    /**
+     * @return CrosstabVariableCollection
+     */
+    public function getVariableCollection(): CrosstabVariableCollection
+    {
+        return CrosstabVariableCollection::__set_state(['variables' => [
+            CrosstabVariable::__set_state([
+                'description' => 'Device Type',
+                'name' => 'Device Type',
+                'categories' =>
+                    [
+                        CrosstabCategory::__set_state([
+                            'description' => 'Desktop',
+                            'name' => 'Desktop',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Mobile Device',
+                            'name' => 'Mobile Device',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Tablet',
+                            'name' => 'Tablet',
+                        ]),
+                    ],
+            ]),
+            CrosstabVariable::__set_state([
+                'description' => 'Platform',
+                'name' => 'Platform',
+                'categories' =>
+                    [
+
+                        CrosstabCategory::__set_state([
+                            'description' => 'iOS',
+                            'name' => 'iOS',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Linux',
+                            'name' => 'Linux',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'MacOSX',
+                            'name' => 'MacOSX',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Windows',
+                            'name' => 'Windows',
+                        ]),
+                    ],
+            ]),
+            CrosstabVariable::__set_state([
+                'description' => 'Browser',
+                'name' => 'Browser',
+                'categories' =>
+                    [
+                        CrosstabCategory::__set_state([
+                            'description' => 'Chrome',
+                            'name' => 'Chrome',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Edge',
+                            'name' => 'Edge',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Firefox',
+                            'name' => 'Firefox',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'IE',
+                            'name' => 'IE',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Netscape',
+                            'name' => 'Netscape',
+                        ]),
+                        CrosstabCategory::__set_state([
+                            'description' => 'Safari',
+                            'name' => 'Safari',
+                        ]),
+                    ],
+            ]),
+        ]]);
     }
 
     /**

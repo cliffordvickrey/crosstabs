@@ -86,7 +86,9 @@ final readonly class CrosstabVariableCollector implements CrosstabVariableCollec
                         return $compA;
                     }
 
+                    // @codeCoverageIgnoreStart
                     return strnatcasecmp($a->name, $b->name);
+                    // @codeCoverageIgnoreEnd
                 });
             }
 

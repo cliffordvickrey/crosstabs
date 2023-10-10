@@ -9,7 +9,6 @@ use CliffordVickrey\Crosstabs\Utilities\CrosstabExtractionUtilities;
 use Traversable;
 
 use function array_key_exists;
-use function is_array;
 use function is_iterable;
 use function is_object;
 use function is_string;
