@@ -8,7 +8,7 @@ use CliffordVickrey\Crosstabs\Crosstab\CrosstabDataItem;
 use CliffordVickrey\Crosstabs\Options\CrosstabPercentType;
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
-use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMathInterface;
 
 /**
  * @internal
@@ -29,7 +29,7 @@ interface CrosstabTreeBuilderInterface
         array $totals,
         CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
         string $messageTotal = 'Total',
-        int $scale = CrosstabMathUtilities::DEFAULT_SCALE
+        int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): CrosstabTree;
 
     /**

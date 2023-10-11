@@ -7,7 +7,7 @@ namespace CliffordVickrey\Crosstabs\Helper;
 use function http_build_query;
 
 /**
- * @inheritDoc
+ * @internal
  */
 class CrosstabParamsSerializer implements CrosstabParamsSerializerInterface
 {

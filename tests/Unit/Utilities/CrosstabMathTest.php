@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace CliffordVickrey\Crosstabs\Tests\Unit\Utilities;
 
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
+use CliffordVickrey\Crosstabs\Utilities\Strategy\CrosstabBcMathStrategy;
+use CliffordVickrey\Crosstabs\Utilities\Strategy\CrosstabFloatingPointMathStrategy;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function extension_loaded;
 use function round;
 
+#[CoversClass(CrosstabBcMathStrategy::class)]
 #[CoversClass(CrosstabMath::class)]
+#[CoversClass(CrosstabFloatingPointMathStrategy::class)]
 class CrosstabMathTest extends TestCase
 {
     /**
@@ -88,8 +92,8 @@ class CrosstabMathTest extends TestCase
         $b = .9;
 
         self::assertEquals(0.09, $this->mathWithBcMath->multiply($a, $b));
-        self::assertNotEquals(0.09, $this->mathWithoutBcMath->multiply($a, $b));
-        self::assertEquals(0.09, round($this->mathWithoutBcMath->multiply($a, $b), 2));
+        self::assertNotEquals(0.09, $this->mathWithoutBcMath->multiply($a, $b, 17));
+        self::assertEquals(0.09, round($this->mathWithoutBcMath->multiply($a, $b, 17), 2));
     }
 
     /**

@@ -6,7 +6,7 @@ namespace CliffordVickrey\Crosstabs\Crosstab;
 
 use ArrayIterator;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
-use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMathInterface;
 use CliffordVickrey\Crosstabs\Writer\CrosstabHtmlWriter;
 use CliffordVickrey\Crosstabs\Writer\CrosstabWriterInterface;
 use IteratorAggregate;
@@ -377,7 +377,7 @@ class Crosstab implements CrosstabInterface, IteratorAggregate, Stringable
     public function getChiSquared(bool $weighted = false, ?int $scale = null): float
     {
         if (null === $scale) {
-            $scale = CrosstabMathUtilities::DEFAULT_SCALE;
+            $scale = CrosstabMathInterface::DEFAULT_SCALE;
         }
 
         $chiSquared = 0.0;

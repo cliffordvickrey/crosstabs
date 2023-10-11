@@ -8,6 +8,9 @@ namespace CliffordVickrey\Crosstabs\NumberFormatting;
 
 use NumberFormatter;
 
+/**
+ * @internal
+ */
 final readonly class CrosstabIntlNumberFormatter implements CrosstabNumberFormatterInterface
 {
     /**

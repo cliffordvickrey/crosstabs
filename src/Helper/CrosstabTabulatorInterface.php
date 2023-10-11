@@ -6,7 +6,7 @@ namespace CliffordVickrey\Crosstabs\Helper;
 
 use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
-use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMathInterface;
 
 /**
  * @internal
@@ -23,6 +23,6 @@ interface CrosstabTabulatorInterface
     public function tabulate(
         CrosstabVariableCollection $variables,
         CrosstabSourceDataCollection $sourceData,
-        int $scale = CrosstabMathUtilities::DEFAULT_SCALE
+        int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): array;
 }

@@ -145,7 +145,7 @@ Sets the locale used for number formatting. Defaults to "en_US." See the intl ex
 
 #### `@setMathematicalScale(int $mathematicalScale): void`
 
-Sets the scale used for floating point math. Defaults to "14," which is the precision of floats in most builds of PHP
+Sets the scale used for floating point math. Defaults to "16," roughly the precision of floats in most builds of PHP
 
 #### `@setMessageExpectedFrequency(string $messageExpectedFrequency): void`
 
@@ -165,11 +165,11 @@ Sets the label to use for NULL values in the table. Defaults to "-"
 
 #### `@setMessageNoData(string $messageNoData): void`
 
-Sets the label to use for empty tables. Default to "There is no data to display"
+Sets the label to use for empty tables. Defaults to "There is no data to display"
 
 #### `@setMessagePercent(string $messagePercent): void`
 
-Sets the label to use for percentage cells. Default to "%"
+Sets the label to use for percentage cells. Defaults to "%"
 
 #### `@setMessageTotal(string $messageTotal): void`
 
@@ -226,7 +226,7 @@ Sets the scale of formatted percentage values in the table. Defaults to 2
 #### `@setShowExpectedFrequency(bool $showExpectedFrequency): void`
 
 Sets whether to display expected frequencies (e.g., the values we'd expect if no relationship existed between X and Y)
-in the table. Default to `FALSE`
+in the table. Defaults to `FALSE`
 
 #### `@setShowExpectedPercent(bool $showExpectedPercent): void`
 
@@ -244,7 +244,7 @@ Sets whether to display percentages in the table. Defaults to `FALSE`
 #### `@setShowWeightedExpectedFrequency(bool $showWeightedExpectedFrequency): void`
 
 Sets whether to display weighted expected frequencies (e.g., the values we'd expect if no relationship existed between X
-and Y) in the table. Default to `FALSE`
+and Y) in the table. Defaults to `FALSE`
 
 #### `@setShowWeightedExpectedPercent(bool $showWeightedExpectedPercent): void`
 

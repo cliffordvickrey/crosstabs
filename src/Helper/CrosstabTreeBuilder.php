@@ -12,7 +12,7 @@ use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTree;
 use CliffordVickrey\Crosstabs\Tree\CrosstabTreeCategoryPayload;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
-use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMathInterface;
 use WeakMap;
 
 use function array_diff_key;
@@ -50,7 +50,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
         array $totals,
         CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
         string $messageTotal = 'Total',
-        int $scale = CrosstabMathUtilities::DEFAULT_SCALE
+        int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): CrosstabTree {
         $matrix = [];
         $counter = 0;

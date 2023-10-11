@@ -6,10 +6,16 @@ namespace CliffordVickrey\Crosstabs\NumberFormatting;
 
 use function number_format;
 
+/**
+ * @internal
+ */
 class CrosstabPolyfillNumberFormatter implements CrosstabNumberFormatterInterface
 {
     private int $scale = 0;
 
+    /**
+     * @param bool $isPercent
+     */
     public function __construct(private readonly bool $isPercent = false)
     {
     }

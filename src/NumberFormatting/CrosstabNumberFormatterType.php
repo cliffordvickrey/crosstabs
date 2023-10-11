@@ -1,5 +1,9 @@
 <?php
 
+/** @noinspection PhpComposerExtensionStubsInspection */
+
+declare(strict_types=1);
+
 namespace CliffordVickrey\Crosstabs\NumberFormatting;
 
 use NumberFormatter;

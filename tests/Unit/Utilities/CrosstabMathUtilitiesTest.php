@@ -42,46 +42,4 @@ class CrosstabMathUtilitiesTest extends TestCase
 
         self::assertEquals($expected, $powerSet);
     }
-
-    /**
-     * @return void
-     */
-    public function testAdd(): void
-    {
-        self::assertEquals(20.6912, CrosstabMathUtilities::add('10.1234', '10.5678'));
-    }
-
-    /**
-     * @return void
-     */
-    public function testSubtract(): void
-    {
-        self::assertEquals(-0.4444, CrosstabMathUtilities::subtract('10.1234', '10.5678'));
-    }
-
-    /**
-     * @return void
-     */
-    public function testDivide(): void
-    {
-        self::assertEquals(0.9579, CrosstabMathUtilities::divide('10.1234', '10.5678', 4));
-        self::assertNull(CrosstabMathUtilities::divide('10.1234', '0'));
-    }
-
-    /**
-     * @return void
-     */
-    public function testMultiply(): void
-    {
-        // this answer is wrong, but only because of a rounding quirk of bcmath
-        self::assertEquals(106.98206, CrosstabMathUtilities::multiply('10.1234', '10.5678', 5));
-    }
-
-    /**
-     * @return void
-     */
-    public function testPow(): void
-    {
-        self::assertEquals(1000, CrosstabMathUtilities::pow('10', '3'));
-    }
 }

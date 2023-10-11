@@ -9,6 +9,7 @@ use CliffordVickrey\Crosstabs\Options\CrosstabVariableCollection;
 use CliffordVickrey\Crosstabs\SourceData\CrosstabSourceDataCollection;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabCastingUtilities;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMath;
+use CliffordVickrey\Crosstabs\Utilities\CrosstabMathInterface;
 use CliffordVickrey\Crosstabs\Utilities\CrosstabMathUtilities;
 
 use function array_flip;
@@ -37,7 +38,7 @@ final readonly class CrosstabTabulator implements CrosstabTabulatorInterface
     public function tabulate(
         CrosstabVariableCollection $variables,
         CrosstabSourceDataCollection $sourceData,
-        int $scale = CrosstabMathUtilities::DEFAULT_SCALE
+        int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): array {
         if (0 === count($variables)) {
             throw new CrosstabLogicException('Variables cannot be empty');
