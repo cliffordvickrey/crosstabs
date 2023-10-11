@@ -1,30 +1,31 @@
 <?php
 
-/** @noinspection PhpComposerExtensionStubsInspection */
-
 declare(strict_types=1);
 
 namespace CliffordVickrey\Crosstabs\NumberFormatting;
 
-use NumberFormatter;
+use function extension_loaded;
 
 /**
  * @internal
  */
 enum CrosstabNumberFormatterType
 {
-    case DECIMAL;
-    case PERCENT;
+    case Decimal;
+    case Percent;
 
     /**
      * @return int
+     * @noinspection PhpFullyQualifiedNameUsageInspection
      */
     public function toIntlConstant(): int
     {
-        if (self::DECIMAL === $this) {
-            return NumberFormatter::DECIMAL;
+        if (!extension_loaded('intl')) {
+            // @codeCoverageIgnoreStart
+            return self::Decimal === $this ? 1 : 3;
+            // @codeCoverageIgnoreEnd
         }
 
-        return NumberFormatter::PERCENT;
+        return self::Decimal === $this ? \NumberFormatter::DECIMAL : \NumberFormatter::PERCENT;
     }
 }

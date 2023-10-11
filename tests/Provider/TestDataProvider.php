@@ -164,7 +164,7 @@ class TestDataProvider
             $builder->setRowVariableName('Platform');
             $builder->setTitle('Browser Usage By Platform');
             $builder->setShowPercent(true);
-            $builder->setPercentType(CrosstabPercentType::COLUMN_WITHIN_LAYER);
+            $builder->setPercentType(CrosstabPercentType::ColumnWithinLayer);
             $builder->setRawData(call_user_func($this));
             $crosstab = $builder->build();
             file_put_contents($filename, serialize($crosstab));

@@ -36,7 +36,7 @@ class CrosstabNumberFormatterFlyweight implements CrosstabNumberFormatterFlyweig
             $maxFractionDigits = \NumberFormatter::MAX_FRACTION_DIGITS;
         } else {
             // @codeCoverageIgnoreStart
-            $nf = new CrosstabPolyfillNumberFormatter($type === CrosstabNumberFormatterType::PERCENT);
+            $nf = new CrosstabPolyfillNumberFormatter($type === CrosstabNumberFormatterType::Percent);
             $maxFractionDigits = 6;
             // @codeCoverageIgnoreEnd
         }

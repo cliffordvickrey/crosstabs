@@ -27,7 +27,7 @@ interface CrosstabTreeBuilderInterface
     public function buildTree(
         CrosstabVariableCollection $variables,
         array $totals,
-        CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
+        CrosstabPercentType $percentType = CrosstabPercentType::Total,
         string $messageTotal = 'Total',
         int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): CrosstabTree;

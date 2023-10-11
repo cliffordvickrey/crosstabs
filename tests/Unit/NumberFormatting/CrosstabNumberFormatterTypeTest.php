@@ -17,9 +17,9 @@ class CrosstabNumberFormatterTypeTest extends TestCase
      */
     public function testToIntlConstant(): void
     {
-        $type = CrosstabNumberFormatterType::DECIMAL;
+        $type = CrosstabNumberFormatterType::Decimal;
         self::assertEquals(NumberFormatter::DECIMAL, $type->toIntlConstant());
-        $type = CrosstabNumberFormatterType::PERCENT;
+        $type = CrosstabNumberFormatterType::Percent;
         self::assertEquals(NumberFormatter::PERCENT, $type->toIntlConstant());
     }
 }

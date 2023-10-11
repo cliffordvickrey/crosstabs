@@ -47,7 +47,7 @@ class CrosstabOptionsTest extends TestCase
         $options->setMessageWeightedExpectedPercent('weighted expected percent');
         $options->setMessageWeightedFrequency('weighted frequency');
         $options->setMessageWeightedPercent('setMessageWeightedPercent');
-        $options->setPercentType(CrosstabPercentType::ROW);
+        $options->setPercentType(CrosstabPercentType::Row);
         $options->setRawData([['something' => 'something']]);
         $options->setRowVariableName('row name');
         $options->setRowVariableDescription('row description');
@@ -94,7 +94,7 @@ class CrosstabOptionsTest extends TestCase
             'messageWeightedExpectedPercent' => 'weighted expected percent',
             'messageWeightedFrequency' => 'weighted frequency',
             'messageWeightedPercent' => 'setMessageWeightedPercent',
-            'percentType' => CrosstabPercentType::ROW,
+            'percentType' => CrosstabPercentType::Row,
             'rawData' => [['something' => 'something']],
             'rowVariableDescription' => 'row description',
             'rowVariableName' => 'row name',

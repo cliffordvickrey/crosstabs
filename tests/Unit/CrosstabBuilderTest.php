@@ -45,7 +45,7 @@ class CrosstabBuilderTest extends TestCase
         $this->builder->setRowVariableName('Platform');
         $this->builder->setTitle('Browser Usage By Platform');
         $this->builder->setShowPercent(true);
-        $this->builder->setPercentType(CrosstabPercentType::COLUMN_WITHIN_LAYER);
+        $this->builder->setPercentType(CrosstabPercentType::ColumnWithinLayer);
         $this->builder->setRawData(self::$data);
     }
 
@@ -334,7 +334,7 @@ class CrosstabBuilderTest extends TestCase
     {
         $this->builder->setTitle('Browser Usage By Platform and Device Type');
         $this->builder->addLayer('Device Type');
-        $this->builder->setPercentType(CrosstabPercentType::COLUMN_WITHIN_LAYER);
+        $this->builder->setPercentType(CrosstabPercentType::ColumnWithinLayer);
         $crosstab = $this->builder->build();
         self::assertEquals(55, $crosstab->getDegreesOfFreedom());
 

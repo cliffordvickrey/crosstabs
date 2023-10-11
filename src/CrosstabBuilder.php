@@ -326,7 +326,7 @@ class CrosstabBuilder extends CrosstabOptions implements CrosstabBuilderInterfac
 
         $valueParsed = (float)$valueParsed;
 
-        $type = $percent ? CrosstabNumberFormatterType::PERCENT : CrosstabNumberFormatterType::DECIMAL;
+        $type = $percent ? CrosstabNumberFormatterType::Percent : CrosstabNumberFormatterType::Decimal;
 
         if ($percent) {
             $scale = $this->scalePercent;

@@ -55,7 +55,7 @@ $builder->setTitle('Browser Usage by Platform');
 $builder->setColVariableName('Browser');
 $builder->setRowVariableName('Platform');
 $builder->setShowPercent(true);
-$builder->setPercentType((\CliffordVickrey\Crosstabs\Options\CrosstabPercentType::COLUMN);
+$builder->setPercentType((\CliffordVickrey\Crosstabs\Options\CrosstabPercentType::Column);
 
 $crosstab = $builder->build();
 
@@ -76,7 +76,7 @@ var_dump($crosstab->getChiSquared()); // 598.35 (clearly significant!)
 $builder->setTitle('Browser Usage by Platform by Device Type');
 $builder->addLayer('Device Type');
 // percentages will be of columns within each layer category; great for visualizing the effects of control variables
-$builder->setPercentType(\CliffordVickrey\Crosstabs\Options\CrosstabPercentType::COLUMN_WITHIN_LAYER);
+$builder->setPercentType(\CliffordVickrey\Crosstabs\Options\CrosstabPercentType::ColumnWithinLayer);
 $crosstab = $builder->build();
 echo $crosstab->write();
 
@@ -194,7 +194,7 @@ Sets the label to use for weighted percentage cells. Defaults to "% (Weighted)
 #### `@setPercentType(CrosstabPercentType $percentType): void`
 
 Sets the percent type (row, column, total, etc.). See the `\CliffordVickrey\Crosstabs\Options\CrosstabPercentType` enum
-for a list of allowable options. Defaults to `CrosstabPercentType::TOTAL`
+for a list of allowable options. Defaults to `CrosstabPercentType::Total`
 
 #### `@setRawData(iterable $rawData): void`
 

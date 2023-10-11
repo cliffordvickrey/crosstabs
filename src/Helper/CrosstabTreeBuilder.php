@@ -48,7 +48,7 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
     public function buildTree(
         CrosstabVariableCollection $variables,
         array $totals,
-        CrosstabPercentType $percentType = CrosstabPercentType::TOTAL,
+        CrosstabPercentType $percentType = CrosstabPercentType::Total,
         string $messageTotal = 'Total',
         int $scale = CrosstabMathInterface::DEFAULT_SCALE
     ): CrosstabTree {
@@ -205,16 +205,16 @@ final class CrosstabTreeBuilder implements CrosstabTreeBuilderInterface
         array $query
     ): array {
         $key = match ($percentType) {
-            CrosstabPercentType::COLUMN => $this->serializer->serializeParams(array_intersect_key($query, [
+            CrosstabPercentType::Column => $this->serializer->serializeParams(array_intersect_key($query, [
                 $colVar->name => true
             ])),
-            CrosstabPercentType::COLUMN_WITHIN_LAYER => $this->serializer->serializeParams(array_diff_key($query, [
+            CrosstabPercentType::ColumnWithinLayer => $this->serializer->serializeParams(array_diff_key($query, [
                 $rowVar->name => true
             ])),
-            CrosstabPercentType::ROW => $this->serializer->serializeParams(array_diff_key($query, [
+            CrosstabPercentType::Row => $this->serializer->serializeParams(array_diff_key($query, [
                 $colVar->name => true
             ])),
-            CrosstabPercentType::TOTAL_WITHIN_LAYER => $this->serializer->serializeParams(array_diff_key($query, [
+            CrosstabPercentType::TotalWithinLayer => $this->serializer->serializeParams(array_diff_key($query, [
                 $rowVar->name => true,
                 $colVar->name => true
             ])),

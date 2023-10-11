@@ -55,7 +55,7 @@ class CrosstabOptions
     protected string $messageWeightedFrequency = 'Frequency (Weighted)';
     /** @var non-empty-string */
     protected string $messageWeightedPercent = '% (Weighted)';
-    protected CrosstabPercentType $percentType = CrosstabPercentType::TOTAL;
+    protected CrosstabPercentType $percentType = CrosstabPercentType::Total;
     /** @var iterable<array-key, mixed> */
     protected iterable $rawData = [];
     /** @var non-empty-string|null */

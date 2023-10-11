@@ -37,7 +37,7 @@ class CrosstabTest extends TestCase
         $builder->setRowVariableName('Platform');
         $builder->setTitle('Browser Usage By Platform');
         $builder->setShowPercent(true);
-        $builder->setPercentType(CrosstabPercentType::COLUMN_WITHIN_LAYER);
+        $builder->setPercentType(CrosstabPercentType::ColumnWithinLayer);
         $builder->setRawData($data);
         $crosstab = $builder->build();
 
