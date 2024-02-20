@@ -7,6 +7,7 @@ namespace CliffordVickrey\Crosstabs\Options;
 use CliffordVickrey\Crosstabs\Exception\CrosstabUnexpectedValueException;
 use Traversable;
 
+use function count;
 use function get_object_vars;
 use function is_array;
 use function is_string;
@@ -109,7 +110,7 @@ class CrosstabOptions
             $layer = new CrosstabVariable($layer->name, $description);
         }
 
-        if (!empty($categories)) {
+        if (!(null === $categories || 0 === count($categories))) {
             $layer = CrosstabVariable::__set_state([
                 'name' => $layer->name,
                 'description' => $layer->description,

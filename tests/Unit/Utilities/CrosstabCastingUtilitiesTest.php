@@ -45,6 +45,17 @@ class CrosstabCastingUtilitiesTest extends TestCase
     /**
      * @return void
      */
+    public function testToNumericString(): void
+    {
+        self::assertEquals('0', CrosstabCastingUtilities::toNumericString(null));
+        self::assertEquals('1', CrosstabCastingUtilities::toNumericString(1));
+        self::assertEquals('0.5', CrosstabCastingUtilities::toNumericString(1 / 2));
+        self::assertEquals('0.00001', CrosstabCastingUtilities::toNumericString(1 / 100000));
+    }
+
+    /**
+     * @return void
+     */
     public function testToNonEmptyString(): void
     {
         self::assertEquals(

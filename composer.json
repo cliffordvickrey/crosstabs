@@ -43,6 +43,7 @@
   "scripts": {
     "analyse": "vendor/bin/phpstan analyse",
     "baseline": "vendor/bin/phpstan analyse --generate-baseline",
+    "clover": "phpunit --coverage-html .clover",
     "migrate": "phpunit --migrate-configuration",
     "phpcs": "vendor/bin/phpcs",
     "phpcbf": "vendor/bin/phpcbf",

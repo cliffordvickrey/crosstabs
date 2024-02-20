@@ -10,6 +10,8 @@ use function abs;
 use function is_int;
 use function is_numeric;
 use function is_scalar;
+use function preg_replace;
+use function str_contains;
 
 /**
  * @internal
@@ -84,6 +86,33 @@ class CrosstabCastingUtilities
         }
 
         return '';
+    }
+
+    /**
+     * @param mixed $value
+     * @return numeric-string
+     */
+    public static function toNumericString(mixed $value): string
+    {
+        $numericValue = self::toNumeric($value);
+
+        if (null === $numericValue) {
+            return '0';
+        }
+
+        $strVal = (string)$numericValue;
+
+        if (is_int($numericValue)) {
+            return $strVal;
+        }
+
+        if (!str_contains($strVal, 'E')) {
+            return $strVal;
+        }
+
+        /** @var numeric-string $strVal */
+        $strVal = (string)preg_replace('/^1\./', '0.', (string)($numericValue + 1.0));
+        return $strVal;
     }
 
     /**

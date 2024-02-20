@@ -26,8 +26,8 @@ class CrosstabBcMathStrategy implements CrosstabMathInterface
      */
     public function add(mixed $addendA, mixed $addendB, int $scale = self::DEFAULT_SCALE): float
     {
-        $addendA = (string)(CrosstabCastingUtilities::toNumeric($addendA) ?? 0.0);
-        $addendB = (string)(CrosstabCastingUtilities::toNumeric($addendB) ?? 0.0);
+        $addendA = CrosstabCastingUtilities::toNumericString($addendA);
+        $addendB = CrosstabCastingUtilities::toNumericString($addendB);
         return (float)bcadd($addendA, $addendB, $scale);
     }
 
@@ -36,7 +36,7 @@ class CrosstabBcMathStrategy implements CrosstabMathInterface
      */
     public function divide(mixed $dividend, mixed $divisor, int $scale = self::DEFAULT_SCALE): ?float
     {
-        $divisor = (string)(CrosstabCastingUtilities::toNumeric($divisor) ?? 0.0);
+        $divisor = CrosstabCastingUtilities::toNumericString($divisor);
 
         if (0 === bccomp('0', $divisor, $scale)) {
             return null;
@@ -51,8 +51,8 @@ class CrosstabBcMathStrategy implements CrosstabMathInterface
      */
     public function multiply(mixed $factorA, mixed $factorB, int $scale = self::DEFAULT_SCALE): float
     {
-        $factorA = (string)(CrosstabCastingUtilities::toNumeric($factorA) ?? 0.0);
-        $factorB = (string)(CrosstabCastingUtilities::toNumeric($factorB) ?? 0.0);
+        $factorA = CrosstabCastingUtilities::toNumericString($factorA);
+        $factorB = CrosstabCastingUtilities::toNumericString($factorB);
         return (float)bcmul($factorA, $factorB, $scale);
     }
 
@@ -61,8 +61,8 @@ class CrosstabBcMathStrategy implements CrosstabMathInterface
      */
     public function subtract(mixed $minuend, mixed $subtrahend, int $scale = self::DEFAULT_SCALE): float
     {
-        $minuend = (string)(CrosstabCastingUtilities::toNumeric($minuend) ?? 0.0);
-        $subtrahend = (string)(CrosstabCastingUtilities::toNumeric($subtrahend) ?? 0.0);
+        $minuend = CrosstabCastingUtilities::toNumericString($minuend);
+        $subtrahend = CrosstabCastingUtilities::toNumericString($subtrahend);
         return (float)bcsub($minuend, $subtrahend, $scale);
     }
 
@@ -71,8 +71,8 @@ class CrosstabBcMathStrategy implements CrosstabMathInterface
      */
     public function pow(mixed $num, mixed $exponent, int $scale = self::DEFAULT_SCALE): float
     {
-        $num = (string)(CrosstabCastingUtilities::toNumeric($num) ?? 0.0);
-        $exponent = (string)(CrosstabCastingUtilities::toNumeric($exponent) ?? 0.0);
+        $num = CrosstabCastingUtilities::toNumericString($num);
+        $exponent = CrosstabCastingUtilities::toNumericString($exponent);
         return (float)bcpow($num, $exponent, $scale);
     }
 }
